@@ -1,0 +1,36 @@
+@using System.Globalization
+@model DhakaRent.Web.UI.ViewModels.ListingGallery
+@if (Model.Media.Count > 0)
+{
+    <section class="mb-4" aria-label="Listing photos and videos">
+        <div class="row g-3">
+        @foreach (var item in Model.Media.OrderBy(m => m.Id))
+        {
+            var src = Url.Action("Show","ListingMedia",new { item.Id });
+            <div class="col-sm-6">
+            @if (item.ContentType.StartsWith("video/"))
+            {
+                <video class="listing-asset" controls preload="metadata" src="@src" aria-label="Property video"></video>
+            }
+            else if (item.ContentType == "application/pdf")
+            {
+                <a href="@src" class="btn btn-outline-primary">Download floor plan (PDF)</a>
+            }
+            else
+            {
+                <a href="@src"><img class="listing-asset" loading="lazy" src="@src" alt="Owner-provided property photo" /></a>
+            }
+            </div>
+        }
+        </div>
+    </section>
+}
+@if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+{
+    var lat = Model.Latitude.Value.ToString(CultureInfo.InvariantCulture);
+    var lon = Model.Longitude.Value.ToString(CultureInfo.InvariantCulture);
+    <div class="mb-4">
+        <div class="listing-map" data-map-lat="@lat" data-map-lon="@lon" aria-label="Property location"></div>
+        <a href="https://www.openstreetmap.org/?mlat=@lat&mlon=@lon#map=17/@lat/@lon">Open map (@lat, @lon)</a>
+    </div>
+}

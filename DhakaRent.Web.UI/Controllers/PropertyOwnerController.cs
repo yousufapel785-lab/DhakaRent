@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using DhakaRent.Entities.Enums;
-using System.Linq;
+using DhakaRent.Web.UI.Services;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DhakaRent.Web.UI.Controllers
 {
@@ -15,10 +16,13 @@ namespace DhakaRent.Web.UI.Controllers
     {
         private readonly IPropertyFacade _propertyFacade;
 
+        private readonly ListingAssets _assets;
+
         public PropertyOwnerController(
-            IPropertyFacade propertyFacade)
+            IPropertyFacade propertyFacade, ListingAssets assets)
         {
             _propertyFacade = propertyFacade;
+            _assets = assets;
         }
 
         // Property Owner Dashboard
@@ -73,17 +77,24 @@ namespace DhakaRent.Web.UI.Controllers
 
         // Display Add Property Form
         [HttpGet]
-        public IActionResult CreateProperty()
+        public async Task<IActionResult> CreateProperty()
         {
-            return View();
+            ViewData["Units"] = await _assets.OwnerUnitsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            return View(new PropertyCreateViewModel());
         }
 
         // Process Add Property Form
-        [HttpPost]
+        [HttpPost, RequestSizeLimit(32_000_000)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProperty(
             PropertyCreateViewModel model)
         {
+            var units = await _assets.OwnerUnitsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            ViewData["Units"] = units;
+            if (!model.UnitId.HasValue)
+                ModelState.AddModelError(nameof(model.UnitId), "Choose an inventory unit. Add a building, floor and unit first if needed.");
+            if (model.UnitId.HasValue && units.All(u => u.Value != model.UnitId.ToString()))
+                ModelState.AddModelError(nameof(model.UnitId), "Choose an available unit in your portfolio.");
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -102,6 +113,7 @@ namespace DhakaRent.Web.UI.Controllers
             var property = new Property
             {
                 OwnerId = ownerId,
+                Latitude = model.Latitude, Longitude = model.Longitude, UnitId = model.UnitId,
                 Title = model.Title,
                 PropertyType = model.PropertyType,
                 Description = model.Description,
@@ -115,6 +127,8 @@ namespace DhakaRent.Web.UI.Controllers
                 AvailableFrom = model.AvailableFrom
             };
 
+            try { property.Media = await ListingAssets.ReadAsync(model.Uploads, 0); }
+            catch (InvalidDataException e) { ModelState.AddModelError("", e.Message); return View(model); }
             await _propertyFacade.CreatePropertyAsync(property);
 
             TempData["SuccessMessage"] =
@@ -164,6 +178,7 @@ namespace DhakaRent.Web.UI.Controllers
             var model = new PropertyEditViewModel
             {
                 Id = property.Id,
+                Latitude = property.Latitude, Longitude = property.Longitude, UnitId = property.UnitId,
                 Title = property.Title,
                 PropertyType = property.PropertyType,
                 Description = property.Description,
@@ -177,16 +192,28 @@ namespace DhakaRent.Web.UI.Controllers
                 AvailableFrom = property.AvailableFrom
             };
 
+            ViewData["Units"] = await _assets.OwnerUnitsAsync(ownerId, property.UnitId);
+            ViewData["ExistingMedia"] = property.Media;
             // Step 7: Send existing data to Edit View
             return View(model);
         }
 
-        [HttpPost]
+        [HttpPost, RequestSizeLimit(32_000_000)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProperty(
             PropertyEditViewModel model)
         {
             // Step 1: Validate submitted form
+            var existing = await _propertyFacade.GetPropertyByIdAsync(model.Id);
+            if (existing == null || existing.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
+                return NotFound();
+            ViewData["ExistingMedia"] = existing.Media;
+            var units = await _assets.OwnerUnitsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!, existing.UnitId);
+            ViewData["Units"] = units;
+            if (existing.UnitId.HasValue && !model.UnitId.HasValue)
+                ModelState.AddModelError(nameof(model.UnitId), "Choose an inventory unit.");
+            if (model.UnitId.HasValue && units.All(u => u.Value != model.UnitId.ToString()))
+                ModelState.AddModelError(nameof(model.UnitId), "Choose an available unit in your portfolio.");
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -204,6 +231,7 @@ namespace DhakaRent.Web.UI.Controllers
             // Step 3: Map allowed form fields to Property
             var updatedData = new Property
             {
+                Latitude = model.Latitude, Longitude = model.Longitude, UnitId = model.UnitId,
                 Title = model.Title,
                 PropertyType = model.PropertyType,
                 Description = model.Description,
@@ -217,12 +245,16 @@ namespace DhakaRent.Web.UI.Controllers
                 AvailableFrom = model.AvailableFrom
             };
 
+            try { updatedData.Media = await ListingAssets.ReadAsync(model.Uploads,
+                existing.Media.Count(m => !model.RemoveMedia.Contains(m.Id))); }
+            catch (InvalidDataException e) { ModelState.AddModelError("", e.Message); return View(model); }
+
             // Step 4: Call secure Facade method
             var result = await _propertyFacade
                 .UpdateOwnerPropertyAsync(
                     model.Id,
                     ownerId,
-                    updatedData);
+                    updatedData, model.RemoveMedia);
 
             // Step 5: Handle unsuccessful update
             if (!result)

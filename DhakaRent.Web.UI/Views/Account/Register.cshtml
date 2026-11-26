@@ -95,6 +95,8 @@
                             </span>
                         </div>
 
+                        <label class="form-check mb-3"><input asp-for="RegistrationConsent" required class="form-check-input" /> I agree that DhakaRent may use my name, email and account type to manage my account and rental requests.</label>
+                        <span asp-validation-for="RegistrationConsent" class="text-danger"></span>
                         <button type="submit"
                                 class="btn btn-primary w-100 mt-2">
                             Create Account

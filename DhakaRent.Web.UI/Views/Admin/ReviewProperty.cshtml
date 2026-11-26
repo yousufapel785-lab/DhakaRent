@@ -29,6 +29,8 @@
         </div>
 
         <div class="card-body">
+            <partial name="_ListingGallery" model="Model.Gallery" />
+
 
             <h4>@Model.Title</h4>
 
@@ -142,7 +144,7 @@
             </span>
 
             <p class="text-muted mt-2 mb-0">
-                This property is waiting for your approval.
+                @(Model.ListingStatus == "Pending" ? "This property is waiting for your approval." : Model.RejectionReason)
             </p>
 
         </div>

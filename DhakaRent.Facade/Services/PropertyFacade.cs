@@ -168,7 +168,7 @@ namespace DhakaRent.Facade.Services
         public async Task<bool> UpdateOwnerPropertyAsync(
             int propertyId,
             string ownerId,
-            Property updatedData)
+            Property updatedData, int[]? removeMedia = null)
         {
             // Step 1: Validate basic parameters
             if (propertyId <= 0 ||
@@ -227,6 +227,11 @@ namespace DhakaRent.Facade.Services
 
 
             // Step 6: Update allowed property fields only
+            existingProperty.Latitude = updatedData.Latitude;
+            existingProperty.Longitude = updatedData.Longitude;
+            existingProperty.UnitId = updatedData.UnitId;
+            existingProperty.Media.RemoveAll(m => removeMedia?.Contains(m.Id) == true);
+            existingProperty.Media.AddRange(updatedData.Media);
             existingProperty.Title = updatedData.Title.Trim();
             existingProperty.PropertyType = updatedData.PropertyType;
             existingProperty.Description =

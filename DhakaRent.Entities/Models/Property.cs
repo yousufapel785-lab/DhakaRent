@@ -12,6 +12,16 @@ namespace DhakaRent.Entities.Models
         [Required]
         public string OwnerId { get; set; } = string.Empty;
 
+        public int? UnitId { get; set; }
+        public RentalUnit? Unit { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public List<ListingMedia> Media { get; set; } = [];
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool IsPubliclyAvailable => ListingStatus == ListingStatus.Approved &&
+            (UnitId == null || Unit is { OccupancyStatus: UnitOccupancyStatus.Vacant } && !Unit.Floor.Building.IsArchived);
+
         // Basic Property Information
         [Required]
         [StringLength(150)]

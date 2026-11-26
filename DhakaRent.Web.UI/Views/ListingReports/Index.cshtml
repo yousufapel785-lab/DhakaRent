@@ -1,0 +1,18 @@
+@model List<DhakaRent.Entities.Models.PropertyReport>
+@{ ViewData["Title"] = "Listing reports"; }
+<h1>Listing reports</h1>
+@if (Model.Count == 0) { <p>No reports are waiting for review.</p> }
+@foreach (var report in Model)
+{
+    <section class="card card-body mb-3">
+        <h2 class="h5">@report.Reason</h2>
+        <p>@report.Description</p>
+        <a asp-controller="Admin" asp-action="ReviewProperty" asp-route-id="@report.PropertyId">View listing #@report.PropertyId</a>
+        <form asp-action="Review" method="post" class="desk-form">
+            <input type="hidden" name="id" value="@report.Id" />
+            <label>Review notes<textarea required maxlength="1000" name="remarks"></textarea></label>
+            <button class="btn btn-primary" name="decision" value="Resolved">Mark resolved</button>
+            <button class="btn btn-outline-secondary" name="decision" value="Dismissed">Dismiss report</button>
+        </form>
+    </section>
+}

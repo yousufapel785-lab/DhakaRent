@@ -49,9 +49,17 @@ namespace DhakaRent.Web.UI.ViewModels
         public DateTime? AvailableFrom { get; set; }
 
 
+        public int? UnitId { get; set; }
+        [Range(typeof(decimal), "-90", "90")] public decimal? Latitude { get; set; }
+        [Range(typeof(decimal), "-180", "180")] public decimal? Longitude { get; set; }
+        public List<IFormFile>? Uploads { get; set; }
+        public int[] RemoveMedia { get; set; } = [];
+
         public IEnumerable<ValidationResult> Validate(
             ValidationContext validationContext)
         {
+            if (Latitude.HasValue != Longitude.HasValue)
+                yield return new ValidationResult("Enter both coordinates or leave both empty.", [nameof(Latitude)]);
             // Current date in Bangladesh (UTC+6)
             DateTime todayInBangladesh =
                 DateTime.UtcNow.AddHours(6).Date;

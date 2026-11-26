@@ -47,6 +47,7 @@ namespace DhakaRent.DataAccess.Repositories
 
                 where saved.TenantId == tenantId
                       && property.ListingStatus == ListingStatus.Approved
+                      && (property.Unit == null || property.Unit.OccupancyStatus == UnitOccupancyStatus.Vacant && !property.Unit.Floor.Building.IsArchived)
 
                 orderby saved.SavedAt descending, saved.Id descending
 
@@ -68,7 +69,8 @@ namespace DhakaRent.DataAccess.Repositories
 
                     Bathrooms = property.Bathrooms,
 
-                    ImageUrl = _context.PropertyImages
+                    ImageUrl = property.Media.Where(m => m.ContentType.StartsWith("image/")).OrderBy(m => m.Id)
+                        .Select(m => "/listing-media/" + m.Id).FirstOrDefault() ?? _context.PropertyImages
                         .AsNoTracking()
                         .Where(image =>
                             image.PropertyId == property.Id)

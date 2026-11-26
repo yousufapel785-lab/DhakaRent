@@ -120,7 +120,7 @@ namespace DhakaRent.Facade.Services
             }
 
             // Step 5: Only approved properties allow inquiries
-            if (property.ListingStatus != ListingStatus.Approved)
+            if (!property.IsPubliclyAvailable)
             {
                 throw new ArgumentException(
                     "Inquiries are allowed only for approved properties.");

@@ -69,6 +69,12 @@ namespace DhakaRent.DataAccess.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("RegistrationConsentUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RegistrationConsentVersion")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -90,6 +96,37 @@ namespace DhakaRent.DataAccess.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.AuditEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditEvents");
                 });
 
             modelBuilder.Entity("DhakaRent.Entities.Models.Building", b =>
@@ -138,6 +175,38 @@ namespace DhakaRent.DataAccess.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Buildings");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.BuildingStaffAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuildingId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("CanManageRepairs")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanReadAccounts")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("StaffUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffUserId");
+
+                    b.HasIndex("BuildingId", "StaffUserId")
+                        .IsUnique();
+
+                    b.ToTable("BuildingStaff");
                 });
 
             modelBuilder.Entity("DhakaRent.Entities.Models.Conversation", b =>
@@ -207,6 +276,199 @@ namespace DhakaRent.DataAccess.Migrations
                     b.ToTable("Floors");
                 });
 
+            modelBuilder.Entity("DhakaRent.Entities.Models.InvoiceCharge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int?>("RentInvoiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RentInvoiceId");
+
+                    b.ToTable("InvoiceCharge");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.LeaseAgreement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly?>("AgreedUntil")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Deposit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DepositObligations")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DueDay")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("MonthlyRent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly?>("NextRentInvoiceMonth")
+                        .IsConcurrencyToken()
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("TermRevision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UnitId")
+                        .IsUnique()
+                        .HasFilter("[EndDate] IS NULL");
+
+                    b.ToTable("Leases");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ListingMedia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("ListingMedia");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ListingMediaContent", b =>
+                {
+                    b.Property<int>("ListingMediaId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Bytes")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("ListingMediaId");
+
+                    b.ToTable("ListingMediaContent");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.MaintenanceTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .IsConcurrencyToken()
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)");
+
+                    b.Property<decimal>("Expense")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("LeaseAgreementId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OpenedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("StartedUtc")
+                        .IsConcurrencyToken()
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaseAgreementId");
+
+                    b.ToTable("MaintenanceTicket");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ManualPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("ConfirmedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ConfirmedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RentInvoiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RentInvoiceId", "Reference")
+                        .IsUnique();
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("DhakaRent.Entities.Models.Message", b =>
                 {
                     b.Property<int>("Id")
@@ -240,6 +502,131 @@ namespace DhakaRent.DataAccess.Migrations
                     b.HasIndex("ConversationId", "SentAt");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.OperatingExpense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BuildingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateOnly>("IncurredOn")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId");
+
+                    b.ToTable("OperatingExpenses");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.OwnerSubscription", b =>
+                {
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("BuildingLimit")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MonthlyFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("TrialThrough")
+                        .HasColumnType("date");
+
+                    b.Property<int>("UnitLimit")
+                        .HasColumnType("int");
+
+                    b.HasKey("OwnerId");
+
+                    b.ToTable("OwnerSubscription");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.PrivateDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExpiresUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LeaseAgreementId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PolicyVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Review")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmittedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SubmittedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresUtc");
+
+                    b.HasIndex("LeaseAgreementId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("PrivateDocument");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.PrivateDocumentContent", b =>
+                {
+                    b.Property<int>("PrivateDocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Ciphertext")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("PrivateDocumentId");
+
+                    b.ToTable("PrivateDocumentContent");
                 });
 
             modelBuilder.Entity("DhakaRent.Entities.Models.Property", b =>
@@ -280,8 +667,17 @@ namespace DhakaRent.DataAccess.Migrations
                     b.Property<bool>("IsFurnished")
                         .HasColumnType("bit");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.Property<int>("ListingStatus")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
 
                     b.Property<decimal>("MonthlyRent")
                         .HasPrecision(18, 2)
@@ -307,12 +703,18 @@ namespace DhakaRent.DataAccess.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<int?>("UnitId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdatedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("UnitId");
 
                     b.HasIndex("ListingStatus", "Area");
 
@@ -428,6 +830,7 @@ namespace DhakaRent.DataAccess.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Status")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -441,6 +844,35 @@ namespace DhakaRent.DataAccess.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("PropertyReports");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.RentInvoice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("LeaseAgreementId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaseAgreementId", "Month")
+                        .IsUnique();
+
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("DhakaRent.Entities.Models.RentPredictionHistory", b =>
@@ -477,6 +909,42 @@ namespace DhakaRent.DataAccess.Migrations
                     b.ToTable("RentPredictionHistories");
                 });
 
+            modelBuilder.Entity("DhakaRent.Entities.Models.RentalNotice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventKey")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedUtc");
+
+                    b.ToTable("RentalNotice");
+                });
+
             modelBuilder.Entity("DhakaRent.Entities.Models.RentalUnit", b =>
                 {
                     b.Property<int>("Id")
@@ -495,6 +963,7 @@ namespace DhakaRent.DataAccess.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("OccupancyStatus")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<decimal>("SizeInSqFt")
@@ -544,6 +1013,76 @@ namespace DhakaRent.DataAccess.Migrations
                         .IsUnique();
 
                     b.ToTable("SavedProperties");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.SharedCharge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("LeaseAgreementId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<int>("OperatingExpenseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaseAgreementId");
+
+                    b.HasIndex("OperatingExpenseId", "LeaseAgreementId")
+                        .IsUnique();
+
+                    b.ToTable("SharedCharge");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.SubscriptionMonth", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ConfirmedUtc")
+                        .IsConcurrencyToken()
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Fee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId", "Month")
+                        .IsUnique();
+
+                    b.ToTable("SubscriptionMonth");
                 });
 
             modelBuilder.Entity("DhakaRent.Entities.Models.ViewingRequest", b =>
@@ -735,6 +1274,23 @@ namespace DhakaRent.DataAccess.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DhakaRent.Entities.Models.BuildingStaffAssignment", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.Building", "Building")
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("StaffUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Building");
+                });
+
             modelBuilder.Entity("DhakaRent.Entities.Models.Conversation", b =>
                 {
                     b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
@@ -767,6 +1323,70 @@ namespace DhakaRent.DataAccess.Migrations
                     b.Navigation("Building");
                 });
 
+            modelBuilder.Entity("DhakaRent.Entities.Models.InvoiceCharge", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.RentInvoice", null)
+                        .WithMany("Charges")
+                        .HasForeignKey("RentInvoiceId");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.LeaseAgreement", b =>
+                {
+                    b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DhakaRent.Entities.Models.RentalUnit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ListingMedia", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.Property", "Property")
+                        .WithMany("Media")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ListingMediaContent", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.ListingMedia", null)
+                        .WithOne("Content")
+                        .HasForeignKey("DhakaRent.Entities.Models.ListingMediaContent", "ListingMediaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.MaintenanceTicket", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.LeaseAgreement", null)
+                        .WithMany("Tickets")
+                        .HasForeignKey("LeaseAgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ManualPayment", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.RentInvoice", "Invoice")
+                        .WithMany("Payments")
+                        .HasForeignKey("RentInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+                });
+
             modelBuilder.Entity("DhakaRent.Entities.Models.Message", b =>
                 {
                     b.HasOne("DhakaRent.Entities.Models.Conversation", null)
@@ -782,6 +1402,50 @@ namespace DhakaRent.DataAccess.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DhakaRent.Entities.Models.OperatingExpense", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.Building", "Building")
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Building");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.OwnerSubscription", b =>
+                {
+                    b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("DhakaRent.Entities.Models.OwnerSubscription", "OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.PrivateDocument", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.LeaseAgreement", "Lease")
+                        .WithMany()
+                        .HasForeignKey("LeaseAgreementId");
+
+                    b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Lease");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.PrivateDocumentContent", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.PrivateDocument", null)
+                        .WithOne("Content")
+                        .HasForeignKey("DhakaRent.Entities.Models.PrivateDocumentContent", "PrivateDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DhakaRent.Entities.Models.Property", b =>
                 {
                     b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
@@ -789,6 +1453,13 @@ namespace DhakaRent.DataAccess.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("DhakaRent.Entities.Models.RentalUnit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("DhakaRent.Entities.Models.PropertyImage", b =>
@@ -835,6 +1506,17 @@ namespace DhakaRent.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("DhakaRent.Entities.Models.RentInvoice", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.LeaseAgreement", "Lease")
+                        .WithMany("Invoices")
+                        .HasForeignKey("LeaseAgreementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Lease");
+                });
+
             modelBuilder.Entity("DhakaRent.Entities.Models.RentPredictionHistory", b =>
                 {
                     b.HasOne("DhakaRent.DataAccess.Identity.ApplicationUser", null)
@@ -867,6 +1549,30 @@ namespace DhakaRent.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.SharedCharge", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.LeaseAgreement", null)
+                        .WithMany()
+                        .HasForeignKey("LeaseAgreementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DhakaRent.Entities.Models.OperatingExpense", null)
+                        .WithMany()
+                        .HasForeignKey("OperatingExpenseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.SubscriptionMonth", b =>
+                {
+                    b.HasOne("DhakaRent.Entities.Models.OwnerSubscription", null)
+                        .WithMany("Months")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -944,6 +1650,42 @@ namespace DhakaRent.DataAccess.Migrations
             modelBuilder.Entity("DhakaRent.Entities.Models.Floor", b =>
                 {
                     b.Navigation("Units");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.LeaseAgreement", b =>
+                {
+                    b.Navigation("Invoices");
+
+                    b.Navigation("Tickets");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.ListingMedia", b =>
+                {
+                    b.Navigation("Content")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.OwnerSubscription", b =>
+                {
+                    b.Navigation("Months");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.PrivateDocument", b =>
+                {
+                    b.Navigation("Content")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.Property", b =>
+                {
+                    b.Navigation("Media");
+                });
+
+            modelBuilder.Entity("DhakaRent.Entities.Models.RentInvoice", b =>
+                {
+                    b.Navigation("Charges");
+
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

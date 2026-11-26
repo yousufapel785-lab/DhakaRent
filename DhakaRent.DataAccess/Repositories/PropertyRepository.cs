@@ -20,6 +20,8 @@ namespace DhakaRent.DataAccess.Repositories
         public async Task<Property?> GetByIdAsync(int id)
         {
             return await _context.Properties
+                .Include(p => p.Media)
+                .Include(p => p.Unit)!.ThenInclude(u => u!.Floor).ThenInclude(f => f.Building)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -60,7 +62,8 @@ namespace DhakaRent.DataAccess.Repositories
         // Update an existing property
         public void Update(Property property)
         {
-            _context.Properties.Update(property);
+            if (_context.Entry(property).State == EntityState.Detached)
+                _context.Properties.Update(property);
         }
 
         // Delete a property
@@ -85,7 +88,9 @@ namespace DhakaRent.DataAccess.Repositories
             // Start with approved properties only
             var query = _context.Properties
                 .AsNoTracking()
-                .Where(p => p.ListingStatus == ListingStatus.Approved);
+                .Include(p => p.Media)
+                .Where(p => p.ListingStatus == ListingStatus.Approved && (p.Unit == null ||
+                    p.Unit.OccupancyStatus == UnitOccupancyStatus.Vacant && !p.Unit.Floor.Building.IsArchived));
 
             // Filter by area
             if (!string.IsNullOrWhiteSpace(area))

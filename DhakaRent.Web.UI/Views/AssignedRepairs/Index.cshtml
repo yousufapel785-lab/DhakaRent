@@ -1,0 +1,9 @@
+@model List<DhakaRent.Web.UI.ViewModels.AssignedRepair>
+@{ViewData["Title"]="Assigned repairs";}
+<h1>Assigned repairs</h1>
+@if(Model.Count==0){<p>No repair tickets in your assigned buildings.</p>}
+@foreach(var t in Model){<div class="card card-body mb-3"><h2 class="h5">@t.Building · Unit @t.Unit</h2><p>@t.Description</p>
+@if(t.Complete){<span>Completed</span>}else{
+@if (!t.Started) { <form asp-action="Start" method="post"><input type="hidden" name="id" value="@t.Id" /><button class="btn btn-outline-primary">Start repair</button></form> }
+else { <p>In progress</p> }
+<form asp-action="Complete" method="post"><input type="hidden" name="id" value="@t.Id" /><button class="btn btn-primary">Complete repair</button></form>}</div>}

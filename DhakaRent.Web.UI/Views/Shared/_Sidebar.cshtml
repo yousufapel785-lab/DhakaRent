@@ -1,16 +1,23 @@
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@inject DhakaRent.DataAccess.Context.ApplicationDbContext NavigationDb
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     var workspace = new List<(string Name, string Controller, string Action, string Icon)>();
+    if (User.IsInRole("Admin") || User.IsInRole("PropertyOwner"))
+        workspace.Add(("Subscription", "Subscriptions", "Index", "clipboard-list"));
     if (User.IsInRole("Admin"))
     {
         workspace.Add(("Dashboard", "Admin", "Dashboard", "layout-dashboard"));
+        workspace.Add(("Listing reports", "ListingReports", "Index", "clipboard-list"));
         workspace.Add(("Review queue", "Admin", "PendingProperties", "clipboard-list"));
     }
     if (User.IsInRole("PropertyOwner"))
     {
         workspace.Add(("My listings", "PropertyOwner", "Dashboard", "house"));
         workspace.Add(("My buildings", "Building", "Index", "building-2"));
+        workspace.Add(("Portfolio", "Portfolio", "Index", "building-2"));
         workspace.Add(("Received inquiries", "OwnerInquiry", "Index", "message-circle"));
         workspace.Add(("Viewing requests", "OwnerViewingRequest", "Index", "calendar-days"));
     }
@@ -23,6 +30,21 @@
     }
     if (User.IsInRole("Tenant") || User.IsInRole("PropertyOwner"))
         workspace.Add(("My conversations", "Messaging", "Index", "messages-square"));
+    if (User.IsInRole("Tenant") || User.IsInRole("PropertyOwner"))
+        workspace.Add(("Leases and billing", "RentalDesk", "Index", "clipboard-list"));
+    if (User.Identity?.IsAuthenticated == true)
+        workspace.Add(("Private documents", "Documents", "Index", "clipboard-list"));
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var actor = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var permissions = await NavigationDb.BuildingStaff.AsNoTracking()
+            .Where(a => a.StaffUserId == actor && !a.Building.IsArchived && (a.CanManageRepairs || a.CanReadAccounts))
+            .Select(a => new { a.CanManageRepairs, a.CanReadAccounts }).Distinct().ToListAsync();
+        if (permissions.Any(a => a.CanManageRepairs))
+            workspace.Add(("Assigned repairs", "AssignedRepairs", "Index", "clipboard-list"));
+        if (User.IsInRole("PropertyOwner") || permissions.Any(a => a.CanReadAccounts))
+            workspace.Add(("Building accounts", "BuildingAccounts", "Index", "clipboard-list"));
+    }
 }
 <aside class="offcanvas-lg offcanvas-start shell-sidebar" tabindex="-1" id="site-menu" aria-labelledby="menu-title">
     <div class="offcanvas-header"><h2 class="h5 mb-0" id="menu-title">Menu</h2>

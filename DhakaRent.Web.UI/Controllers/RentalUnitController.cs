@@ -1,5 +1,7 @@
 ﻿
 using System.Security.Claims;
+using DhakaRent.Entities.Enums;
+using Microsoft.EntityFrameworkCore;
 using DhakaRent.Facade.Interfaces;
 using DhakaRent.Web.UI.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -14,12 +16,17 @@ namespace DhakaRent.Web.UI.Controllers
         private readonly IFloorFacade _floorFacade;
         private readonly IBuildingFacade _buildingFacade;
 
-        public RentalUnitController(
+        private readonly DhakaRent.Web.UI.Services.OwnerCapacity _capacity;
+
+        private readonly DhakaRent.DataAccess.Context.ApplicationDbContext _db;
+        public RentalUnitController(DhakaRent.Web.UI.Services.OwnerCapacity capacity, DhakaRent.DataAccess.Context.ApplicationDbContext db,
             IRentalUnitFacade unitFacade,
             IFloorFacade floorFacade,
             IBuildingFacade buildingFacade)
         {
             _unitFacade = unitFacade;
+            _capacity = capacity;
+            _db = db;
             _floorFacade = floorFacade;
             _buildingFacade = buildingFacade;
         }
@@ -57,6 +64,19 @@ namespace DhakaRent.Web.UI.Controllers
                 .GetByFloorAsync(floorId, ownerId);
 
             return View(units);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Maintenance(int id, bool enable)
+        {
+            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var unit = await _db.RentalUnits.SingleOrDefaultAsync(u => u.Id == id && u.Floor.Building.OwnerId == ownerId && !u.Floor.Building.IsArchived);
+            if (unit == null) return NotFound();
+            var required = enable ? UnitOccupancyStatus.Vacant : UnitOccupancyStatus.Maintenance;
+            if (unit.OccupancyStatus != required) return Conflict("The unit status has changed.");
+            unit.OccupancyStatus = enable ? UnitOccupancyStatus.Maintenance : UnitOccupancyStatus.Vacant;
+            await _db.SaveChangesAsync();
+            return RedirectToAction(nameof(Index), new { floorId = unit.FloorId });
         }
 
         // GET: /RentalUnit/Create?floorId=1
@@ -132,10 +152,7 @@ namespace DhakaRent.Web.UI.Controllers
                     model.Bathrooms
                 );
 
-                await _unitFacade.CreateAsync(
-                    floorId,
-                    ownerId,
-                    input);
+                await _capacity.CreateAsync(ownerId, false, () => _unitFacade.CreateAsync(floorId, ownerId, input));
 
                 TempData["SuccessMessage"] =
                     "Rental unit created successfully.";

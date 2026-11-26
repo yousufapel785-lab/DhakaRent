@@ -36,7 +36,7 @@ namespace DhakaRent.Facade.Interfaces
         Task<bool> UpdateOwnerPropertyAsync(
             int propertyId,
             string ownerId,
-            Property updatedData);
+            Property updatedData, int[]? removeMedia = null);
 
 
         Task<bool> DeactivateOwnerPropertyAsync(
