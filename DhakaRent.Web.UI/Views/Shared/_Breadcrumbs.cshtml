@@ -1,0 +1,56 @@
+@using DhakaRent.Web.UI.ViewModels
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var home = controller == "Home" && action == "Index";
+    var parents = new List<(string Label, string? Url)>();
+    void Parent(string label, string destination, string page = "Index", object? values = null)
+        => parents.Add((label, Url.Action(page, destination, values)));
+
+    if (!home) { Parent("Home", "Home"); }
+    if (controller == "Properties" && action == "Details")
+        Parent("Browse properties", "Properties");
+    if (controller is "Building" or "Floor" or "RentalUnit")
+    {
+        if (controller != "Building" || action != "Index") { Parent("My buildings", "Building"); }
+        if ((controller == "Floor" && action != "Index" || controller == "RentalUnit") && ViewData["BuildingId"] is int buildingId)
+            Parent("Building floors", "Floor", values: new { buildingId });
+        if (controller == "RentalUnit" && action != "Index" && ViewData["FloorId"] is int floorId)
+            Parent("Rental units", "RentalUnit", values: new { floorId });
+    }
+    if (controller == "PropertyOwner" && action != "Dashboard")
+        Parent("My listings", "PropertyOwner", "Dashboard");
+    if (controller == "Admin" && action != "Dashboard")
+    {
+        Parent("Admin dashboard", "Admin", "Dashboard");
+        if (action != "PendingProperties") { Parent("Review queue", "Admin", "PendingProperties"); }
+        if (Model is RejectPropertyViewModel rejection)
+            Parent("Review property", "Admin", "ReviewProperty", new { id = rejection.PropertyId });
+    }
+    if ((controller is "ViewingRequest" or "PropertyInquiry") && action == "Create")
+    {
+        Parent("Browse properties", "Properties");
+        var id = Model is ViewingRequestFormViewModel viewing ? viewing.PropertyId : ViewData["PropertyId"] as int?;
+        if (id > 0) { Parent("Property details", "Properties", "Details", new { id }); }
+    }
+    else if (controller is "SavedProperty" or "PropertyInquiry" or "ViewingRequest" or "OwnerInquiry" or "OwnerViewingRequest" or "Messaging")
+    {
+        if (User.IsInRole("Tenant")) { Parent("My dashboard", "Tenant", "Dashboard"); }
+        else if (User.IsInRole("PropertyOwner")) { Parent("My listings", "PropertyOwner", "Dashboard"); }
+        if (controller == "Messaging" && action == "Details") { Parent("My conversations", "Messaging"); }
+    }
+    var title = home ? "Home" : ViewData["Title"]?.ToString() ?? action;
+}
+<div class="page-trail">
+    <nav aria-label="Breadcrumb"><ol class="breadcrumb mb-0">
+        @foreach (var item in parents)
+        {
+            <li class="breadcrumb-item"><a href="@item.Url">@item.Label</a></li>
+        }
+        <li class="breadcrumb-item active" aria-current="page">@title</li>
+    </ol></nav>
+    @if (!home)
+    {
+        <a class="back-link" href="@parents.Last().Url" data-go-back>← Back</a>
+    }
+</div>

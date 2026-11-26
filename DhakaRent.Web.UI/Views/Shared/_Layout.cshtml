@@ -1,26 +1,12 @@
+@using DhakaRent.Web.UI.ViewModels
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using Microsoft.AspNetCore.Mvc.ModelBinding
+@inject IModelMetadataProvider MetadataProvider
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
-    var action = ViewContext.RouteData.Values["action"]?.ToString();
     var signedIn = User.Identity?.IsAuthenticated == true;
-    var links = new List<(string Text, string Controller, string Action, bool Current)>
-    {
-        ("Home", "Home", "Index", controller == "Home" && action == "Index"),
-        ("Browse properties", "Properties", "Index", controller == "Properties")
-    };
-    if (User.IsInRole("Admin"))
-    {
-        links.Add(("Dashboard", "Admin", "Dashboard", controller == "Admin" && action == "Dashboard"));
-        links.Add(("Review queue", "Admin", "PendingProperties", controller == "Admin" && action != "Dashboard"));
-    }
-    else if (User.IsInRole("PropertyOwner"))
-    {
-        links.Add(("My listings", "PropertyOwner", "Dashboard", controller == "PropertyOwner"));
-        links.Add(("My buildings", "Building", "Index", controller is "Building" or "Floor" or "RentalUnit"));
-    }
-    else if (User.IsInRole("Tenant"))
-    {
-        links.Add(("My dashboard", "Tenant", "Dashboard", controller == "Tenant"));
-    }
+    var search = ViewData.Model as PublicPropertySearchViewModel;
+    var searchData = new ViewDataDictionary(MetadataProvider, search == null ? new ModelStateDictionary() : ViewData.ModelState);
 }
 <!doctype html>
 <html lang="en">
@@ -34,46 +20,53 @@
 <body>
     <a class="skip-link" href="#content">Skip to content</a>
     <header class="site-header">
-        <nav class="container navbar navbar-expand-lg navbar-light" aria-label="Main navigation">
+        <div class="shell-toolbar">
+            <button class="icon-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#site-menu" aria-controls="site-menu" aria-label="Open navigation menu"><img src="~/icons/menu.svg" alt="" /></button>
             <a class="wordmark" asp-controller="Home" asp-action="Index" aria-label="DhakaRent AI home">
                 <span class="brand-mark"><img src="~/icons/building-2.svg" width="23" height="23" alt="" /></span>
                 <span>DhakaRent <small>AI</small></span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
-                    aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-            <div id="navigation" class="collapse navbar-collapse">
-                <div class="navbar-nav site-links">
-                    @foreach (var link in links)
-                    {
-                        <a class="nav-link @(link.Current ? "selected" : "")" aria-current="@(link.Current ? "location" : null)"
-                           asp-controller="@link.Controller" asp-action="@link.Action">@link.Text</a>
-                    }
-                </div>
-                <div class="account-links">
-                    @if (signedIn)
-                    {
-                        <span class="account-name">@User.Identity?.Name</span>
-                        <form asp-controller="Account" asp-action="Logout" method="post"><button class="btn btn-outline-secondary">Log out</button></form>
-                    }
-                    else
-                    {
-                        <a class="login-link" asp-controller="Account" asp-action="Login">Log in</a>
-                        <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Create account</a>
-                    }
-                </div>
+            <button class="search-toggle" type="button" data-open-search aria-haspopup="dialog" aria-controls="rental-search" aria-label="Search rentals"><img src="~/icons/search.svg" alt="" /><span>Search rentals</span></button>
+            <div class="account-links">
+                @if (signedIn)
+                {
+                    <span class="account-name">@User.Identity?.Name</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post"><button class="btn btn-outline-secondary">Log out</button></form>
+                }
+                else
+                {
+                    <a class="login-link" asp-controller="Account" asp-action="Login">Log in</a>
+                    <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Register</a>
+                }
             </div>
-        </nav>
+        </div>
     </header>
-    <main id="content" tabindex="-1" class="container page-content" data-section="@controller">
-        @RenderBody()
-    </main>
+    <div class="shell-middle">
+        <partial name="_Sidebar" />
+        <main id="content" tabindex="-1" class="content-scroll" data-section="@controller">
+            <div class="container page-content">
+                <partial name="_Breadcrumbs" />
+                @RenderBody()
+            </div>
+        </main>
+    </div>
     <footer class="site-footer"><div class="container footer-row">
         <span>© @DateTime.Now.Year DhakaRent AI</span>
         <span class="footer-place">Dhaka, Bangladesh</span>
         <a asp-controller="Home" asp-action="Privacy">Privacy</a>
     </div></footer>
+    @await Html.PartialAsync("_RentalSearch", search ?? new PublicPropertySearchViewModel(), searchData)
+    @if (!signedIn)
+    {
+        <dialog id="account-prompt" class="shell-dialog" aria-labelledby="account-prompt-title" aria-describedby="account-prompt-message">
+            <div class="dialog-heading"><h2 id="account-prompt-title">Create a tenant account</h2><button class="btn-close" type="button" data-close-dialog aria-label="Close"></button></div>
+            <p id="account-prompt-message"></p>
+            <div class="dialog-actions"><a asp-controller="Account" asp-action="Login">Log in</a><a class="btn btn-primary" asp-controller="Account" asp-action="Register">Register</a></div>
+        </dialog>
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

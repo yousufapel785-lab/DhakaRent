@@ -1,0 +1,16 @@
+@using DhakaRent.Entities.Enums
+@model DhakaRent.Web.UI.ViewModels.PublicPropertySearchViewModel
+<dialog id="rental-search" class="shell-dialog search-dialog" aria-labelledby="rental-search-title" data-invalid="@(!ViewData.ModelState.IsValid ? "true" : "false")">
+    <div class="dialog-heading"><h2 id="rental-search-title">Search rentals</h2><button type="button" class="btn-close" data-close-dialog aria-label="Close search"></button></div>
+    <form asp-controller="Properties" asp-action="Index" method="get">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="search-fields">
+            <div class="full-field"><label for="filter-area">Neighborhood</label><input id="filter-area" asp-for="Area" class="form-control" placeholder="e.g. Mirpur" /></div>
+            <div><label for="filter-type">Property type</label><select id="filter-type" asp-for="PropertyType" asp-items="Html.GetEnumSelectList<PropertyType>()" class="form-select"><option value="">Any type</option></select></div>
+            <div><label for="filter-bedrooms">Bedrooms</label><input id="filter-bedrooms" asp-for="Bedrooms" type="number" min="0" step="1" class="form-control" placeholder="Any" /></div>
+            <div><label for="filter-min">Minimum rent (৳)</label><input id="filter-min" asp-for="MinRent" type="number" min="0" step="0.01" class="form-control" placeholder="No minimum" /></div>
+            <div><label for="filter-max">Maximum rent (৳)</label><input id="filter-max" asp-for="MaxRent" type="number" min="0" step="0.01" class="form-control" placeholder="No maximum" /></div>
+        </div>
+        <div class="dialog-actions"><a asp-controller="Properties" asp-action="Index">Clear filters</a><button type="submit" class="btn btn-primary">Search properties</button></div>
+    </form>
+</dialog>

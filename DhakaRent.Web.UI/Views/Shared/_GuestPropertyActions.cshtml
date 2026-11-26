@@ -1,0 +1,8 @@
+@model int
+@{
+    var details = Url.Action("Details", "Properties", new { id = Model });
+}
+<div class="guest-actions">
+    <button class="btn btn-primary" type="button" data-account-prompt="contact the property owner" data-return-url="@details">Contact owner</button>
+    <button class="btn btn-outline-primary" type="button" data-account-prompt="save this property to your wishlist" data-return-url="@details">Save to wishlist</button>
+</div>

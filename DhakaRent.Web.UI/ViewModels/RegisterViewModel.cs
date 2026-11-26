@@ -5,6 +5,8 @@ namespace DhakaRent.Web.UI.ViewModels
 {
     public class RegisterViewModel
     {
+        public string? ReturnUrl { get; set; }
+
         [Required(ErrorMessage = "Full name is required.")]
         [StringLength(100, MinimumLength = 3,
             ErrorMessage = "Name must be between 3 and 100 characters.")]

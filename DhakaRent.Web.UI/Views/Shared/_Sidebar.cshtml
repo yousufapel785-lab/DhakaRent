@@ -1,0 +1,53 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var workspace = new List<(string Name, string Controller, string Action, string Icon)>();
+    if (User.IsInRole("Admin"))
+    {
+        workspace.Add(("Dashboard", "Admin", "Dashboard", "layout-dashboard"));
+        workspace.Add(("Review queue", "Admin", "PendingProperties", "clipboard-list"));
+    }
+    if (User.IsInRole("PropertyOwner"))
+    {
+        workspace.Add(("My listings", "PropertyOwner", "Dashboard", "house"));
+        workspace.Add(("My buildings", "Building", "Index", "building-2"));
+        workspace.Add(("Received inquiries", "OwnerInquiry", "Index", "message-circle"));
+        workspace.Add(("Viewing requests", "OwnerViewingRequest", "Index", "calendar-days"));
+    }
+    if (User.IsInRole("Tenant"))
+    {
+        workspace.Add(("My dashboard", "Tenant", "Dashboard", "layout-dashboard"));
+        workspace.Add(("My wishlist", "SavedProperty", "Index", "heart"));
+        workspace.Add(("My inquiries", "PropertyInquiry", "Index", "message-circle"));
+        workspace.Add(("My viewing requests", "ViewingRequest", "Index", "calendar-days"));
+    }
+    if (User.IsInRole("Tenant") || User.IsInRole("PropertyOwner"))
+        workspace.Add(("My conversations", "Messaging", "Index", "messages-square"));
+}
+<aside class="offcanvas-lg offcanvas-start shell-sidebar" tabindex="-1" id="site-menu" aria-labelledby="menu-title">
+    <div class="offcanvas-header"><h2 class="h5 mb-0" id="menu-title">Menu</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#site-menu" aria-label="Close menu"></button>
+    </div>
+    <nav class="sidebar-links" aria-label="Main menu">
+        <h2>Explore</h2>
+        <a asp-controller="Home" asp-action="Index" aria-current="@(controller == "Home" && action == "Index" ? "page" : null)"><img src="~/icons/house.svg" alt="" />Home</a>
+        <a asp-controller="Properties" asp-action="Index" aria-current="@(controller == "Properties" ? "location" : null)"><img src="~/icons/building-2.svg" alt="" />Browse properties</a>
+        @if (workspace.Count > 0)
+        {
+            <h2>My workspace</h2>
+            @foreach (var link in workspace)
+            {
+                var current = link.Controller == "Admin" ? controller == "Admin" && (link.Action == "Dashboard") == (action == "Dashboard")
+                    : link.Controller == "Building" ? controller is "Building" or "Floor" or "RentalUnit" : controller == link.Controller;
+                <a asp-controller="@link.Controller" asp-action="@link.Action" aria-current="@(current ? "location" : null)">
+                    <img src="@Url.Content($"~/icons/{link.Icon}.svg")" alt="" />@link.Name
+                </a>
+            }
+        }
+        <h2>Neighborhoods</h2>
+        @foreach (var area in new[] { "Mirpur", "Dhanmondi", "Uttara", "Gulshan" })
+        {
+            <a href="@Url.Action("Index", "Properties")?Area=@area"><img src="~/icons/map-pin.svg" alt="" />@area</a>
+        }
+    </nav>
+</aside>
