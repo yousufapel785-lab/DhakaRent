@@ -109,21 +109,6 @@ namespace DhakaRent.Web.UI.Controllers
                 return View(model);
             }
 
-            if (!roleResult.Succeeded)
-            {
-                // Do not leave an account without its required role
-                await _userManager.DeleteAsync(user);
-
-                foreach (var error in roleResult.Errors)
-                {
-                    ModelState.AddModelError(
-                        string.Empty,
-                        error.Description);
-                }
-
-                return View(model);
-            }
-
             // Sign in after successful registration
             await _signInManager.SignInAsync(
                 user,
@@ -137,14 +122,14 @@ namespace DhakaRent.Web.UI.Controllers
         // GET: /Account/Login
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl)
         {
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Index", "Home");
             }
 
-            return View();
+            return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
         // POST: /Account/Login
         [HttpPost]
@@ -194,6 +179,12 @@ namespace DhakaRent.Web.UI.Controllers
                 // Get user's assigned roles
                 var roles = await _userManager.GetRolesAsync(user);
 
+                if (Url.IsLocalUrl(model.ReturnUrl) &&
+                    roles.Any(role => role is "Admin" or "Tenant" or "PropertyOwner"))
+                {
+                    return LocalRedirect(model.ReturnUrl!);
+                }
+
                 // Redirect according to role
                 if (roles.Contains("Admin"))
                 {
@@ -235,6 +226,14 @@ namespace DhakaRent.Web.UI.Controllers
 
             return View(model);
         }
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            Response.StatusCode = StatusCodes.Status403Forbidden;
+            return View();
+        }
+
         // POST: /Account/Logout
         [HttpPost]
         [Authorize]
