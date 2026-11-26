@@ -83,6 +83,7 @@ namespace DhakaRent.Web.UI.Controllers
 
             ViewBag.FloorId = floor.Id;
             ViewBag.FloorLabel = floor.Label;
+            ViewBag.BuildingId = building.Id;
             ViewBag.BuildingName = building.Name;
 
             return View(new RentalUnitFormViewModel());
@@ -115,6 +116,7 @@ namespace DhakaRent.Web.UI.Controllers
 
             ViewBag.FloorId = floor.Id;
             ViewBag.FloorLabel = floor.Label;
+            ViewBag.BuildingId = building.Id;
             ViewBag.BuildingName = building.Name;
 
             if (!ModelState.IsValid)
@@ -183,6 +185,7 @@ namespace DhakaRent.Web.UI.Controllers
             ViewBag.UnitId = unit.Id;
             ViewBag.FloorId = floor.Id;
             ViewBag.FloorLabel = floor.Label;
+            ViewBag.BuildingId = building.Id;
             ViewBag.BuildingName = building.Name;
 
             var model = new RentalUnitFormViewModel
@@ -232,6 +235,7 @@ namespace DhakaRent.Web.UI.Controllers
             ViewBag.UnitId = unit.Id;
             ViewBag.FloorId = floor.Id;
             ViewBag.FloorLabel = floor.Label;
+            ViewBag.BuildingId = building.Id;
             ViewBag.BuildingName = building.Name;
 
             if (!ModelState.IsValid)

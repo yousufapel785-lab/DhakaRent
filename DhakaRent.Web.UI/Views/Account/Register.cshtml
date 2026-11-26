@@ -24,6 +24,7 @@
                           method="post">
 
                         @Html.AntiForgeryToken()
+                        <input asp-for="ReturnUrl" type="hidden" />
 
                         <div asp-validation-summary="ModelOnly"
                              class="text-danger mb-3">
@@ -107,7 +108,7 @@
                         </span>
 
                         <a asp-controller="Account"
-                           asp-action="Login">
+                           asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">
                             Login
                         </a>
                     </div>

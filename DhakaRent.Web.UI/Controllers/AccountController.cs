@@ -24,14 +24,14 @@ namespace DhakaRent.Web.UI.Controllers
         // GET: /Account/Register
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Register()
+        public IActionResult Register(string? returnUrl)
         {
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Index", "Home");
             }
 
-            return View();
+            return View(new RegisterViewModel { ReturnUrl = returnUrl });
         }
 
         // POST: /Account/Register
@@ -116,6 +116,9 @@ namespace DhakaRent.Web.UI.Controllers
 
             TempData["SuccessMessage"] =
                 "Your account has been created successfully!";
+
+            if (Url.IsLocalUrl(model.ReturnUrl))
+                return LocalRedirect(model.ReturnUrl!);
 
             return RedirectToAction("Index", "Home");
         }

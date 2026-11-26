@@ -22,20 +22,6 @@
 
 <div class="container py-4">
 
-    <!-- Back to Properties -->
-    <div class="mb-3">
-
-        <a asp-controller="Properties"
-           asp-action="Index"
-           class="btn btn-outline-secondary">
-
-            <i class="bi bi-arrow-left me-1"></i>
-            Back to Properties
-
-        </a>
-
-    </div>
-
     <!-- Success Message -->
     @if (TempData["SuccessMessage"] != null)
     {
@@ -108,6 +94,10 @@
 
             </h3>
 
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <partial name="_GuestPropertyActions" model="propertyId" />
+            }
             <!-- Tenant Actions -->
             @if (isTenant && propertyId > 0)
             {

@@ -1,9 +1,13 @@
 ﻿@model DhakaRent.Web.UI.ViewModels.PublicPropertySearchViewModel
 
-@using DhakaRent.Entities.Enums
-
 @{
     ViewData["Title"] = "Available Properties";
+    var filters = new List<string>();
+    if (!string.IsNullOrWhiteSpace(Model.Area)) filters.Add(Model.Area);
+    if (Model.PropertyType.HasValue) filters.Add(Model.PropertyType.Value.ToString());
+    if (Model.Bedrooms.HasValue) filters.Add($"{Model.Bedrooms} bedrooms");
+    if (Model.MinRent.HasValue) filters.Add($"From ৳{Model.MinRent:N0}");
+    if (Model.MaxRent.HasValue) filters.Add($"Up to ৳{Model.MaxRent:N0}");
     var isTenant = User.IsInRole("Tenant");
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
@@ -25,119 +29,13 @@
         }
     }
 
-    <!-- Search and Filter Form -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <h2 class="h5 mb-3">Filter listings</h2>
-
-            <form asp-controller="Properties"
-                  asp-action="Index"
-                  method="get">
-
-                <div asp-validation-summary="All"
-                     class="text-danger mb-3">
-                </div>
-
-                <div class="row g-3">
-
-                    <!-- Area -->
-                    <div class="col-md-4">
-                        <label asp-for="Area"
-                               class="form-label">
-                            Area
-                        </label>
-
-                        <input asp-for="Area"
-                               class="form-control"
-                               placeholder="e.g. Mirpur" />
-                    </div>
-
-                    <!-- Property Type -->
-                    <div class="col-md-4">
-                        <label asp-for="PropertyType"
-                               class="form-label">
-                            Property Type
-                        </label>
-
-                        <select asp-for="PropertyType"
-                                asp-items="Html.GetEnumSelectList<PropertyType>()"
-                                class="form-select">
-
-                            <option value="">
-                                All Property Types
-                            </option>
-
-                        </select>
-                    </div>
-
-                    <!-- Bedrooms -->
-                    <div class="col-md-4">
-                        <label asp-for="Bedrooms"
-                               class="form-label">
-                            Bedrooms
-                        </label>
-
-                        <input asp-for="Bedrooms"
-                               type="number"
-                               min="0"
-                               step="1"
-                               class="form-control"
-                               placeholder="Any" />
-                    </div>
-
-                    <!-- Minimum Rent -->
-                    <div class="col-md-6">
-                        <label asp-for="MinRent"
-                               class="form-label">
-                            Minimum Rent (BDT)
-                        </label>
-
-                        <input asp-for="MinRent"
-                               type="number"
-                               min="0"
-                               step="0.01"
-                               class="form-control"
-                               placeholder="Minimum rent" />
-                    </div>
-
-                    <!-- Maximum Rent -->
-                    <div class="col-md-6">
-                        <label asp-for="MaxRent"
-                               class="form-label">
-                            Maximum Rent (BDT)
-                        </label>
-
-                        <input asp-for="MaxRent"
-                               type="number"
-                               min="0"
-                               step="0.01"
-                               class="form-control"
-                               placeholder="Maximum rent" />
-                    </div>
-
-                </div>
-
-                <div class="mt-4 d-flex gap-2">
-
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Search Properties
-                    </button>
-
-                    <a asp-controller="Properties"
-                       asp-action="Index"
-                       class="btn btn-outline-secondary">
-                        Clear Filters
-                    </a>
-
-                </div>
-
-            </form>
-
+    @if (filters.Count > 0 && ViewData.ModelState.IsValid)
+    {
+        <div class="d-flex align-items-center flex-wrap gap-2" aria-label="Active filters">
+            @foreach (var filter in filters) { <span class="listing-type">@filter</span> }
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-open-search>Edit filters</button>
         </div>
-    </div>
-
+    }
     <div class="result-heading">
         <h2 class="h4">Available rentals</h2>
         <span class="text-muted">@Model.Properties.Count @(Model.Properties.Count == 1 ? "listing" : "listings")</span>
@@ -146,7 +44,11 @@
             <a asp-controller="SavedProperty" asp-action="Index" class="ms-auto">My wishlist</a>
         }
     </div>
-    @if (!Model.Properties.Any())
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-warning">Please correct your search filters. <button type="button" class="btn btn-link" data-open-search>Edit filters</button></div>
+    }
+    else if (!Model.Properties.Any())
     {
         <div class="alert alert-info">No rentals match these filters. Try a different area or a wider budget.</div>
     }
@@ -169,12 +71,17 @@
                                class="btn btn-outline-primary" aria-label="View details for @item.Title">View details</a>
                             @if (isTenant)
                             {
+                                <a asp-controller="PropertyInquiry" asp-action="Create" asp-route-propertyId="@item.Id" class="btn btn-primary">Contact owner</a>
                                 <form asp-controller="SavedProperty" asp-action="@(item.IsSavedToWishlist ? "Remove" : "Save")" method="post"
                                       onsubmit="@(item.IsSavedToWishlist ? "return confirm('Remove this property from your wishlist?')" : null)">
                                     <input type="hidden" name="propertyId" value="@item.Id" />
                                     <input type="hidden" name="returnUrl" value="@returnUrl" />
                                     <button class="btn btn-outline-secondary w-100">@(item.IsSavedToWishlist ? "Remove from wishlist" : "Save to wishlist")</button>
                                 </form>
+                            }
+                            else if (User.Identity?.IsAuthenticated != true)
+                            {
+                                <partial name="_GuestPropertyActions" model="item.Id" />
                             }
                         </div>
                     </article>
