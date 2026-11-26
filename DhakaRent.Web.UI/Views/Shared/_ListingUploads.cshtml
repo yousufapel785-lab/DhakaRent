@@ -1,0 +1,36 @@
+@using DhakaRent.Entities.Models
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model DhakaRent.Web.UI.ViewModels.PropertyCreateViewModel
+@inject IConfiguration Configuration
+<fieldset class="mb-4">
+    <legend>Unit, location and media</legend>
+    <label asp-for="UnitId" class="form-label">Inventory unit</label>
+    <select asp-for="UnitId" asp-items="@(ViewData["Units"] as IEnumerable<SelectListItem>)" class="form-select mb-2"><option value="">Select a unit</option></select>
+    <span asp-validation-for="UnitId" class="text-danger"></span>
+    <a asp-controller="Building" asp-action="Index">Manage buildings and units</a>
+    <p>Click the map to place the apartment, or enter both coordinates.</p>
+    <div class="listing-map" data-map-picker aria-label="Choose listing location"></div>
+    <button type="button" class="btn btn-outline-secondary mb-2" data-use-location>Use my current location</button>
+    @if (Uri.TryCreate(Configuration["Geocoding:SearchEndpoint"], UriKind.Absolute, out var geocoder) && geocoder.Scheme == "https")
+    {
+        <button type="button" class="btn btn-outline-secondary mb-2" data-geocode="@Url.Action("Search","Geocoding")">Find entered address on map</button>
+        <small>Address lookup sends the address and area to @geocoder.Host.</small>
+    }
+    <span role="status" data-location-status></span>
+    <div class="row mb-3">
+        <div class="col"><label asp-for="Latitude"></label><input asp-for="Latitude" min="-90" max="90" step="any" type="number" class="form-control" /><span asp-validation-for="Latitude" class="text-danger"></span></div>
+        <div class="col"><label asp-for="Longitude"></label><input asp-for="Longitude" min="-180" max="180" step="any" type="number" class="form-control" /><span asp-validation-for="Longitude" class="text-danger"></span></div>
+    </div>
+    <label asp-for="Uploads" class="form-label">Photos, videos and public floor plans</label>
+    <input asp-for="Uploads" type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,application/pdf" class="form-control" aria-describedby="listing-upload-help" />
+    <small id="listing-upload-help">JPEG, PNG, WebP, MP4, WebM or PDF. Only upload material you want published with the listing. Up to 8 files per listing, 24 MB each and 30 MB per submission.</small>
+    <div data-upload-preview class="row g-2 mt-2" aria-live="polite"></div>
+    @if (ViewData["ExistingMedia"] is IEnumerable<ListingMedia> media)
+    {
+        @foreach (var item in media.OrderBy(m => m.Id))
+        {
+            <div><a asp-controller="ListingMedia" asp-action="Show" asp-route-id="@item.Id" target="_blank" rel="noopener">View @item.ContentType attachment</a>
+                <label><input type="checkbox" name="RemoveMedia" value="@item.Id" checked="@(Model.RemoveMedia.Contains(item.Id))" /> Remove</label></div>
+        }
+    }
+</fieldset>

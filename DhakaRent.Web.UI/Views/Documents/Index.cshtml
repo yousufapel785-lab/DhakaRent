@@ -1,0 +1,33 @@
+@using DhakaRent.Entities.Models
+@model List<PrivateDocument>
+@{ViewData["Title"]="Private documents";}
+<h1>Private documents</h1>
+@if(TempData["DocumentError"] is string error){<p role="alert" class="alert alert-warning">@error</p>}
+@if (ViewData["UploadsEnabled"] is true && (User.IsInRole("PropertyOwner") || User.IsInRole("Tenant")))
+{
+    <form asp-action="Upload" method="post" enctype="multipart/form-data" class="card card-body mb-3">
+        @if(User.IsInRole("PropertyOwner")){
+            <label>Lease agreement<select name="leaseId" required class="form-select"><option value="">Choose lease</option>
+            @foreach(var id in (List<int>)ViewData["LeaseIds"]!){<option value="@id">Lease #@id</option>}</select></label>
+            <p>The owner and the primary tenant can download this agreement.</p>
+        }else{<p>Upload a tenant profile document for internal review. You and platform administrators can download it. Do not upload national IDs or tax records here.</p>}
+        <label>PDF (up to 5 MB)<input type="file" name="document" accept="application/pdf" required class="form-control" /></label>
+        <label class="my-3"><input type="checkbox" name="consent" value="true" required /> I agree to the access described above for @ViewData["Retention"] days under policy @ViewData["Policy"].</label>
+        <button class="btn btn-primary">Upload private document</button>
+    </form>
+}else if(ViewData["UploadsEnabled"] is false){<p class="alert alert-info">Document uploads are awaiting publication of the site's retention policy.</p>}
+@foreach(var d in Model){
+    <section class="card card-body mb-3"><h2 class="h5">@(d.LeaseAgreementId.HasValue?$"Agreement for lease #{d.LeaseAgreementId}":"Tenant profile document") · #@d.Id</h2>
+        <p>Submitted @d.SubmittedUtc.ToString("yyyy-MM-dd") · Expires @d.ExpiresUtc.ToString("yyyy-MM-dd")</p>
+        @if(d.Purpose==DocumentPurpose.TenantProfile){<p>Internal review: @d.Review</p>}
+        <a asp-action="Download" asp-route-id="@d.Id">Download PDF</a>
+        @if(d.Purpose==DocumentPurpose.TenantProfile && User.IsInRole("Admin")){
+            <form asp-action="Review" method="post" class="desk-form"><input type="hidden" name="id" value="@d.Id" />
+                <button name="decision" value="Accepted" class="btn btn-primary">Accept for profile</button>
+                <button name="decision" value="NeedsReplacement" class="btn btn-outline-secondary">Request replacement</button></form>
+        }
+        @if(d.Purpose==DocumentPurpose.TenantProfile && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value==d.SubmittedBy){
+            <form asp-action="Withdraw" method="post"><input type="hidden" name="id" value="@d.Id" /><button class="btn btn-outline-danger">Withdraw document</button></form>
+        }
+    </section>
+}

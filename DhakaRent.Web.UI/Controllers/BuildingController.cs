@@ -12,10 +12,13 @@ namespace DhakaRent.Web.UI.Controllers
     {
         private readonly IBuildingFacade _buildingFacade;
 
-        public BuildingController(
+        private readonly DhakaRent.Web.UI.Services.OwnerCapacity _capacity;
+
+        public BuildingController(DhakaRent.Web.UI.Services.OwnerCapacity capacity,
             IBuildingFacade buildingFacade)
         {
             _buildingFacade = buildingFacade;
+            _capacity = capacity;
         }
 
         // GET: /Building
@@ -72,8 +75,7 @@ namespace DhakaRent.Web.UI.Controllers
 
             try
             {
-                await _buildingFacade.CreateAsync(
-                    ownerId, input);
+                await _capacity.CreateAsync(ownerId, true, () => _buildingFacade.CreateAsync(ownerId, input));
 
                 TempData["SuccessMessage"] =
                     "Building created successfully.";

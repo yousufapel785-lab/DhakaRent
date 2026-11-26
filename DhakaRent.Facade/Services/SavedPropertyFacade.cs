@@ -38,7 +38,7 @@ namespace DhakaRent.Facade.Services
                     .GetByIdAsync(saved.PropertyId);
 
                 if (property != null &&
-                    property.ListingStatus == ListingStatus.Approved)
+                    property.IsPubliclyAvailable)
                 {
                     approvedSavedProperties.Add(saved);
                 }
@@ -100,7 +100,7 @@ namespace DhakaRent.Facade.Services
                 .GetByIdAsync(propertyId);
 
             if (property == null ||
-                property.ListingStatus != ListingStatus.Approved)
+                !property.IsPubliclyAvailable)
             {
                 throw new ArgumentException(
                     "Only approved properties can be saved.");

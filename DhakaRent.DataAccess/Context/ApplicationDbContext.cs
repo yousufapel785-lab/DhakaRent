@@ -46,11 +46,50 @@ namespace DhakaRent.DataAccess.Context
         public DbSet<RentalUnit> RentalUnits { get; set; }
 
 
+        public DbSet<OperatingExpense> OperatingExpenses => Set<OperatingExpense>();
+        public DbSet<BuildingStaffAssignment> BuildingStaff => Set<BuildingStaffAssignment>();
+        public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+
+        public DbSet<LeaseAgreement> Leases => Set<LeaseAgreement>();
+        public DbSet<RentInvoice> Invoices => Set<RentInvoice>();
+        public DbSet<ManualPayment> Payments => Set<ManualPayment>();
+
         protected override void OnModelCreating(
             ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
+
+            builder.Entity<OwnerSubscription>().HasOne<ApplicationUser>().WithOne().HasForeignKey<OwnerSubscription>(s => s.OwnerId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<SubscriptionMonth>().HasOne<OwnerSubscription>().WithMany(s => s.Months).HasForeignKey(m => m.OwnerId);
+            builder.Entity<SubscriptionMonth>().HasIndex(m => new { m.OwnerId, m.Month }).IsUnique();
+            builder.Entity<SubscriptionMonth>().Property(m => m.ConfirmedUtc).IsConcurrencyToken();
+            builder.Entity<SharedCharge>().HasIndex(s => new { s.OperatingExpenseId, s.LeaseAgreementId }).IsUnique();
+            builder.Entity<SharedCharge>().HasOne<LeaseAgreement>().WithMany().HasForeignKey(s => s.LeaseAgreementId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<SharedCharge>().HasOne<OperatingExpense>().WithMany().HasForeignKey(s => s.OperatingExpenseId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<RentalNotice>().HasIndex(n => n.EventKey).IsUnique();
+            builder.Entity<RentalNotice>().HasIndex(n => new { n.UserId, n.CreatedUtc });
+            builder.Entity<PrivateDocument>().HasOne(d=>d.Content).WithOne().HasForeignKey<PrivateDocumentContent>(d=>d.PrivateDocumentId);
+            builder.Entity<PrivateDocument>().HasOne<ApplicationUser>().WithMany().HasForeignKey(d=>d.TenantId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<PrivateDocument>().HasIndex(d=>d.ExpiresUtc);
+            builder.Entity<BuildingStaffAssignment>().HasIndex(a => new { a.BuildingId, a.StaffUserId }).IsUnique();
+            builder.Entity<BuildingStaffAssignment>().HasOne<ApplicationUser>().WithMany().HasForeignKey(a => a.StaffUserId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<PropertyReport>().Property(r => r.Status).IsConcurrencyToken();
+            builder.Entity<Property>().Property(p => p.ListingStatus).IsConcurrencyToken();
+            builder.Entity<Property>().Property(p => p.UpdatedAt).IsConcurrencyToken();
+            builder.Entity<LeaseAgreement>().HasOne<ApplicationUser>().WithMany().HasForeignKey(l => l.TenantId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<LeaseAgreement>().HasOne(l => l.Unit).WithMany().HasForeignKey(l => l.UnitId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<LeaseAgreement>().HasIndex(l => l.UnitId).IsUnique().HasFilter("[EndDate] IS NULL");
+            builder.Entity<RentInvoice>().HasIndex(i => new { i.LeaseAgreementId, i.Month }).IsUnique();
+            builder.Entity<RentInvoice>().HasOne(i => i.Lease).WithMany(l => l.Invoices).HasForeignKey(i => i.LeaseAgreementId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<ManualPayment>().HasIndex(p => new { p.RentInvoiceId, p.Reference }).IsUnique();
+            builder.Entity<MaintenanceTicket>().Property(t => t.CompletedAtUtc).IsConcurrencyToken();
+            builder.Entity<RentalUnit>().Property(u => u.OccupancyStatus).IsConcurrencyToken();
+            builder.Entity<Property>().Property(p => p.Latitude).HasPrecision(9, 6);
+            builder.Entity<Property>().Property(p => p.Longitude).HasPrecision(9, 6);
+            builder.Entity<Property>().HasOne(p => p.Unit).WithMany().HasForeignKey(p => p.UnitId).OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<ListingMedia>().HasOne(m => m.Content).WithOne()
+                .HasForeignKey<ListingMediaContent>(c => c.ListingMediaId);
 
             // 1. Property Configuration
 

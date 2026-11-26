@@ -1,0 +1,9 @@
+@model List<DhakaRent.Entities.Models.Building>
+@{ ViewData["Title"] = "Building accounts"; }
+<h1>Building accounts</h1>
+@if (Model.Count == 0) { <p>You have no buildings with accounting access.</p> }
+@foreach (var building in Model)
+{
+    <section class="card card-body mb-3"><h2 class="h5">@building.Name</h2>
+        <a asp-action="Export" asp-route-id="@building.Id">Download leases, rent and expenses (CSV)</a></section>
+}

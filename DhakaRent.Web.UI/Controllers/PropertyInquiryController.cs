@@ -134,7 +134,7 @@ namespace DhakaRent.Web.UI.Controllers
                 .GetByIdAsync(propertyId);
 
             if (property == null ||
-                property.ListingStatus != ListingStatus.Approved)
+                !property.IsPubliclyAvailable)
             {
                 return NotFound();
             }
@@ -178,7 +178,7 @@ namespace DhakaRent.Web.UI.Controllers
                 .GetByIdAsync(propertyId);
 
             if (property == null ||
-                property.ListingStatus != ListingStatus.Approved)
+                !property.IsPubliclyAvailable)
             {
                 return NotFound();
             }

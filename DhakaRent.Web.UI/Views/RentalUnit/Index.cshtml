@@ -196,6 +196,15 @@
                                                class="btn btn-sm btn-outline-primary">
                                                 Edit
                                             </a>
+                                            @if (unit.OccupancyStatus is DhakaRent.Entities.Enums.UnitOccupancyStatus.Vacant or DhakaRent.Entities.Enums.UnitOccupancyStatus.Maintenance)
+                                            {
+                                                var enable = unit.OccupancyStatus == DhakaRent.Entities.Enums.UnitOccupancyStatus.Vacant;
+                                                <form asp-action="Maintenance" method="post" class="mt-1">
+                                                    <input type="hidden" name="id" value="@unit.Id" />
+                                                    <input type="hidden" name="enable" value="@enable.ToString().ToLowerInvariant()" />
+                                                    <button class="btn btn-sm btn-outline-secondary">@(enable ? "Mark under maintenance" : "Return to vacant")</button>
+                                                </form>
+                                            }
                                         }
                                         else
                                         {

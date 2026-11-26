@@ -46,6 +46,9 @@ namespace DhakaRent.Web.UI.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            if (!model.RegistrationConsent)
+                ModelState.AddModelError(nameof(model.RegistrationConsent), "Confirm the use of your account information to register.");
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -67,6 +70,8 @@ namespace DhakaRent.Web.UI.Controllers
             // Create new user
             var user = new ApplicationUser
             {
+                RegistrationConsentUtc = DateTime.UtcNow,
+                RegistrationConsentVersion = "registration-v1",
                 FullName = model.FullName.Trim(),
                 UserName = model.Email.Trim(),
                 Email = model.Email.Trim()

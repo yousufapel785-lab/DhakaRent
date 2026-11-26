@@ -25,9 +25,10 @@
 
             <form asp-controller="PropertyOwner"
                   asp-action="EditProperty"
-                  method="post">
+                  method="post" enctype="multipart/form-data">
 
                 @Html.AntiForgeryToken()
+                        <partial name="_ListingUploads" model="Model" />
 
                 <input asp-for="Id" type="hidden" />
 
@@ -213,5 +214,6 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/listing-uploads.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
 }

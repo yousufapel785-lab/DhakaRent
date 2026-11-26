@@ -1,0 +1,7 @@
+@{ ViewData["Title"] = "Recover your account"; }
+<h1>Recover your account</h1>
+@if (TempData["RecoveryMessage"] is string notice) { <p role="status">@notice</p> }
+<form asp-action="Send" method="post" class="desk-form">
+    <label>Account email<input type="email" name="email" autocomplete="email" required /></label>
+    <button class="btn btn-primary">Email reset link</button>
+</form>

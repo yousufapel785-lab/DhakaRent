@@ -77,6 +77,8 @@
     <div class="card shadow-sm property-details-card">
 
         <div class="card-body p-4">
+            <partial name="_ListingGallery" model="Model.Gallery" />
+
 
             <span class="listing-type">@Model.PropertyType</span>
             <h1 class="mt-3 mb-2">@Model.Title</h1>
@@ -274,3 +276,15 @@
     </div>
 
 </div>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <details class="mb-3"><summary>Report this listing</summary>
+        <form asp-controller="ListingReports" asp-action="Submit" method="post" class="desk-form">
+            <input type="hidden" name="propertyId" value="@propertyId" />
+            <label>Reason<input required maxlength="100" name="reason" /></label>
+            <label>What happened?<textarea required maxlength="2000" name="description"></textarea></label>
+            <button class="btn btn-outline-primary">Send report</button>
+        </form>
+    </details>
+}

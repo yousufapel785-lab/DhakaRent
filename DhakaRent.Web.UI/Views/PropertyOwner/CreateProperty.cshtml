@@ -23,9 +23,10 @@
 
                     <form asp-action="CreateProperty"
                           asp-controller="PropertyOwner"
-                          method="post">
+                          method="post" enctype="multipart/form-data">
 
                         @Html.AntiForgeryToken()
+                        <partial name="_ListingUploads" model="Model" />
 
                         <div asp-validation-summary="ModelOnly"
                              class="text-danger mb-3">
@@ -183,6 +184,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/listing-uploads.js" asp-append-version="true"></script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }

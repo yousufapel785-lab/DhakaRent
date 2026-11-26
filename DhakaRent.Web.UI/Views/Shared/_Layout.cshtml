@@ -4,6 +4,8 @@
 @inject IModelMetadataProvider MetadataProvider
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    bool actionHasMap() => (controller, ViewContext.RouteData.Values["action"]?.ToString()) is
+        ("Properties", "Details" or "Index") or ("Admin", "ReviewProperty") or ("PropertyOwner", "CreateProperty" or "EditProperty");
     var signedIn = User.Identity?.IsAuthenticated == true;
     var search = ViewData.Model as PublicPropertySearchViewModel;
     var searchData = new ViewDataDictionary(MetadataProvider, search == null ? new ModelStateDictionary() : ViewData.ModelState);
@@ -15,6 +17,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] · DhakaRent AI</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @if (actionHasMap())
+    {
+        <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    }
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -67,6 +73,10 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (actionHasMap())
+    {
+        <script src="~/lib/leaflet/leaflet.js"></script><script src="~/js/listing-map.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

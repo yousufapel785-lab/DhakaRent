@@ -56,13 +56,15 @@ namespace DhakaRent.Web.UI.Controllers
             return View(model);
         }
 
+        private readonly DhakaRent.DataAccess.Context.ApplicationDbContext _db;
         private readonly IPropertyFacade _propertyFacade;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public AdminController(
     IPropertyFacade propertyFacade,
-    UserManager<ApplicationUser> userManager)
+    UserManager<ApplicationUser> userManager, DhakaRent.DataAccess.Context.ApplicationDbContext db)
         {
+            _db = db;
             _propertyFacade = propertyFacade;
             _userManager = userManager;
         }
@@ -115,12 +117,6 @@ namespace DhakaRent.Web.UI.Controllers
                 return NotFound();
             }
 
-            // Only pending properties can enter the approval review
-            if (property.ListingStatus != ListingStatus.Pending)
-            {
-                return NotFound();
-            }
-
             // Retrieve property owner's account
             var owner = await _userManager
                 .FindByIdAsync(property.OwnerId);
@@ -128,6 +124,7 @@ namespace DhakaRent.Web.UI.Controllers
             // Map database entity to ViewModel
             var model = new AdminPropertyReviewViewModel
             {
+                Gallery = new(property.Latitude, property.Longitude, property.Media),
                 Id = property.Id,
                 Title = property.Title,
                 PropertyType = property.PropertyType.ToString(),
@@ -158,6 +155,7 @@ namespace DhakaRent.Web.UI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveProperty(int id)
         {
+            _db.AuditEvents.Add(new() { ActorId = _userManager.GetUserId(User)!, Action = "Listing approved", Resource = $"Property/{id}" });
             var result = await _propertyFacade.ApprovePropertyAsync(id);
 
             if (!result)
@@ -201,6 +199,7 @@ namespace DhakaRent.Web.UI.Controllers
                 return View(model);
             }
 
+            _db.AuditEvents.Add(new() { ActorId = _userManager.GetUserId(User)!, Action = "Listing rejected", Resource = $"Property/{model.PropertyId}" });
             var result = await _propertyFacade.RejectPropertyAsync(
                 model.PropertyId,
                 model.Reason);

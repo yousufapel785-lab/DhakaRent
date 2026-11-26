@@ -145,7 +145,7 @@ namespace DhakaRent.Facade.Services
 
             // Step G: Only approved properties are eligible
             if (property == null ||
-                property.ListingStatus != ListingStatus.Approved)
+                !property.IsPubliclyAvailable)
             {
                 throw new InvalidOperationException(
                     "This property is not available for viewing requests.");

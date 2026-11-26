@@ -3,6 +3,9 @@ namespace DhakaRent.Web.UI.ViewModels
 {
     public class PublicPropertyListItemViewModel
     {
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public int? CoverId { get; set; }
         public int Id { get; set; }
 
         public string Title { get; set; } = string.Empty;

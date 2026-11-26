@@ -5,6 +5,7 @@ namespace DhakaRent.Web.UI.ViewModels
 {
     public class RegisterViewModel
     {
+        public bool RegistrationConsent { get; set; }
         public string? ReturnUrl { get; set; }
 
         [Required(ErrorMessage = "Full name is required.")]

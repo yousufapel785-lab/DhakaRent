@@ -1,0 +1,119 @@
+@using DhakaRent.Entities.Models
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model List<LeaseAgreement>
+@{
+    ViewData["Title"] = "Leases and billing";
+    var owner = User.IsInRole("PropertyOwner");
+    var today = DateTime.UtcNow.AddHours(6).ToString("yyyy-MM-dd");
+}
+<h1>Leases and billing</h1>
+<partial name="_SuccessMessage" />
+@if (ViewData["Notices"] is List<string> notices && notices.Count > 0)
+{
+    <details class="card card-body mb-3"><summary>Billing notices (@notices.Count)</summary><ul>
+        @foreach (var notice in notices) { <li>@notice</li> }
+    </ul></details>
+}
+@if (TempData["DeskError"] is string error) { <p role="alert" class="alert alert-warning">@error</p> }
+@if (owner)
+{
+    <a asp-action="Export" class="btn btn-outline-primary mb-3">Download rent report</a>
+    <details class="card mb-4 p-3"><summary>Start a lease</summary>
+        <form asp-action="Start" method="post" class="desk-form">
+            <label>Vacant unit<select required name="unitId" asp-items="@(ViewData["Units"] as IEnumerable<SelectListItem>)" class="form-select"><option value="">Choose unit</option></select></label>
+            <label>Registered tenant email<input required type="email" name="tenantEmail" /></label>
+            <label>Start date<input required type="date" name="start" max="@today" /></label>
+            <label>Monthly rent (৳)<input required type="number" name="rent" step=".01" min=".01" /></label>
+            <label>Deposit (৳)<input required type="number" name="deposit" value="0" step=".01" min="0" /></label>
+            <label>Rent due day<input required type="number" name="dueDay" min="1" max="28" value="5" /></label>
+            <button class="btn btn-primary">Start lease</button>
+        </form>
+    </details>
+}
+@if (Model.Count == 0) { <p class="alert alert-info">There are no leases for this account yet.</p> }
+@foreach (var group in Model.GroupBy(l => l.Unit.Floor.BuildingId))
+{
+    <h2>@group.First().Unit.Floor.Building.Name</h2>
+    @foreach (var lease in group)
+    {
+        <section class="card card-body mb-3">
+            <h3>Unit @lease.Unit.UnitNumber · Lease #@lease.Id</h3>
+            <p>@lease.StartDate.ToString("dd MMM yyyy") – @(lease.EndDate?.ToString("dd MMM yyyy") ?? "Active") · Rent ৳@lease.MonthlyRent.ToString("N2") · Deposit ৳@lease.Deposit.ToString("N2") · Due day @lease.DueDay</p>
+            @if (lease.AgreedUntil.HasValue) { <p>Agreed end date @lease.AgreedUntil.Value.ToString("dd MMM yyyy")</p> }
+            @if (!string.IsNullOrEmpty(lease.DepositObligations)) { <p>Deposit obligations · @lease.DepositObligations</p> }
+            @if (owner)
+            {
+                <details><summary>Agreement, renewal and deposit</summary>
+                    <form asp-action="Terms" method="post" class="desk-form">
+                        <input type="hidden" name="leaseId" value="@lease.Id" />
+                        <label>Agreed end date<input type="date" name="agreedUntil" value="@(lease.AgreedUntil?.ToString("yyyy-MM-dd"))" /></label>
+                        <label>Deposit obligations<textarea name="depositObligations" maxlength="500">@lease.DepositObligations</textarea></label>
+                        @if (lease.EndDate == null) {
+                            <label><input type="checkbox" name="automaticRent" value="true" checked="@lease.NextRentInvoiceMonth.HasValue" /> Issue a rent-only invoice every month, starting this month. For itemized utilities, issue invoices manually.</label>
+                        }
+                        <button class="btn btn-primary">Save lease terms</button>
+                    </form>
+                </details>
+                <details><summary>Issue monthly invoice</summary>
+                    <form asp-action="Bill" method="post" class="desk-form">
+                        <input type="hidden" name="leaseId" value="@lease.Id" />
+                        <label>Billing month<input required type="month" name="month" value="@(today[..7])" /></label>
+                        @foreach (var charge in new[]{"Water","Gas","Electricity","Service"})
+                        {
+                            <label>@charge (৳)<input required type="number" name="@charge" value="0" step=".01" min="0" /></label>
+                        }
+                        <details><summary>Metered electricity</summary>
+                            <label>Previous reading<input type="number" name="previous" min="0" step=".01" /></label>
+                            <label>Current reading<input type="number" name="current" min="0" step=".01" /></label>
+                            <label>Tariff per unit (৳)<input type="number" name="rate" min=".01" step=".01" /></label>
+                        </details>
+                        <button class="btn btn-primary">Issue invoice</button>
+                    </form>
+                </details>
+                @if (lease.EndDate == null)
+                {
+                    <details><summary>Record move-out</summary><form asp-action="End" method="post" class="desk-form">
+                        <input type="hidden" name="leaseId" value="@lease.Id" /><label>End date<input required type="date" name="end" max="@today" /></label>
+                        <button class="btn btn-outline-secondary">End lease</button>
+                    </form></details>
+                }
+            }
+            @foreach (var bill in lease.Invoices.OrderByDescending(i => i.Month))
+            {
+                <hr /><h4>@bill.Month.ToString("MMMM yyyy") · Invoice #@bill.Id</h4>
+                <p>Due @bill.DueDate.ToString("dd MMM yyyy") · Balance ৳@bill.Balance.ToString("N2")</p>
+                <ul>@foreach (var line in bill.Charges) { <li>@line.Description · ৳@line.Amount.ToString("N2")</li> }</ul>
+                @foreach (var payment in bill.Payments) { <p>Confirmed ৳@payment.Amount.ToString("N2") · <a asp-action="Receipt" asp-route-id="@payment.Id">Download receipt #@payment.Id</a></p> }
+                @if (owner && bill.Balance > 0)
+                {
+                    <details><summary>Record a received payment</summary><form asp-action="Confirm" method="post" class="desk-form">
+                        <input type="hidden" name="invoiceId" value="@bill.Id" />
+                        <label>Amount received (৳)<input required type="number" step=".01" min=".01" max="@bill.Balance" name="amount" /></label>
+                        <label>Receipt or transfer reference<input required maxlength="100" name="reference" /></label>
+                        <button class="btn btn-primary">Confirm received payment</button>
+                    </form></details>
+                }
+            }
+            <hr /><h4>Maintenance</h4>
+            @foreach (var ticket in lease.Tickets)
+            {
+                <p>#@ticket.Id · @ticket.Description · @(ticket.CompletedAtUtc.HasValue ? "Completed" : ticket.StartedUtc.HasValue ? "In progress" : "Open")</p>
+                @if (ticket.CompletedAtUtc.HasValue) { <p>Repair expense ৳@ticket.Expense.ToString("N2")</p> }
+                else if (owner)
+                {
+                    <form asp-action="CompleteRepair" method="post" class="desk-form">
+                        <input type="hidden" name="ticketId" value="@ticket.Id" /><label>Repair expense (৳)<input required name="expense" type="number" min="0" step=".01" value="0" /></label>
+                        <button class="btn btn-outline-primary">Mark repair complete</button>
+                    </form>
+                }
+            }
+            @if (!owner && lease.EndDate == null)
+            {
+                <form asp-action="RequestRepair" method="post" class="desk-form"><input type="hidden" name="leaseId" value="@lease.Id" />
+                    <label>Describe the issue<textarea required name="description" maxlength="1500"></textarea></label>
+                    <button class="btn btn-outline-primary">Request repair</button>
+                </form>
+            }
+        </section>
+    }
+}

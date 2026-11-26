@@ -112,6 +112,8 @@ namespace DhakaRent.Web.UI.Controllers
             search.Properties = properties.Select(property =>
                 new PublicPropertyListItemViewModel
                 {
+                    Latitude = property.Latitude, Longitude = property.Longitude,
+                    CoverId = property.Media.Where(m => m.ContentType.StartsWith("image/")).OrderBy(m => m.Id).Select(m => (int?)m.Id).FirstOrDefault(),
                     Id = property.Id,
                     Title = property.Title,
                     Area = property.Area,
@@ -155,7 +157,7 @@ namespace DhakaRent.Web.UI.Controllers
             // Step C: Only approved properties
             // are visible on the public details page.
             if (property == null ||
-                property.ListingStatus != ListingStatus.Approved)
+                !property.IsPubliclyAvailable)
             {
                 return NotFound();
             }
@@ -190,6 +192,7 @@ namespace DhakaRent.Web.UI.Controllers
             // Step F: Prepare property details ViewModel.
             var model = new PublicPropertyDetailsViewModel
             {
+                Gallery = new(property.Latitude, property.Longitude, property.Media),
                 Id = property.Id,
                 Title = property.Title,
                 Description = property.Description,

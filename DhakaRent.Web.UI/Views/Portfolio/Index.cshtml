@@ -1,0 +1,36 @@
+@model DhakaRent.Web.UI.ViewModels.PortfolioOverview
+@{ ViewData["Title"]="Building portfolio"; }
+<h1>Building portfolio</h1>
+<partial name="_SuccessMessage" />
+@if(TempData["PortfolioError"] is string error){<p class="alert alert-warning">@error</p>}
+@if(Model.Buildings.Count==0){<a asp-controller="Building" asp-action="Create">Add your first building</a>}
+@foreach(var b in Model.Buildings)
+{
+    <section class="card card-body mb-3"><h2>@b.Name</h2>
+        <p>@b.Occupied of @b.Units units occupied · @b.Vacant vacant · @b.ActiveLeases active leases · @b.OpenTickets open repairs</p>
+        <dl class="property-facts">
+        @foreach(var item in new[]{("Monthly rent on active leases",b.MonthlyRent),("Received this month",b.ReceivedThisMonth),("Total billed",b.Billed),("Collected",b.Collected),("Outstanding",b.Outstanding),("Overdue",b.Overdue),("Expenses including repairs",b.Expenses)})
+        {<div><dt>@item.Item1</dt><dd>৳@item.Item2.ToString("N2")</dd></div>}
+        </dl>
+        <details><summary>Add building expense</summary><form asp-action="Expense" method="post" class="desk-form">
+            <input type="hidden" name="buildingId" value="@b.Id" /><label>Date<input type="date" name="incurredOn" required /></label>
+            <label>Description<input name="description" maxlength="160" required /></label>
+            <label>Amount (৳)<input name="amount" type="number" step=".01" min=".01" required /></label>
+            <button class="btn btn-primary">Record expense</button></form></details>
+        <details><summary>Manage building access</summary><form asp-action="Assign" method="post" class="desk-form">
+            <input type="hidden" name="buildingId" value="@b.Id" /><label>Registered staff email<input name="email" type="email" required /></label>
+            <label><input type="checkbox" name="repairs" value="true" /> Manage repairs</label>
+            <label><input type="checkbox" name="accounts" value="true" /> Export building accounts</label>
+            <button class="btn btn-primary">Save access</button></form></details>
+    </section>
+}
+@foreach(var a in Model.Staff){<form asp-action="Revoke" method="post" class="mb-2"><input type="hidden" name="id" value="@a.Id" />@a.Building · @a.Name · @(a.Repairs ? "Repairs" : "") @(a.Accounts ? "Accounts" : "") <button class="btn btn-outline-danger">Revoke access</button></form>}
+@if (Model.Expenses.Count > 0)
+{
+    <details class="card card-body mb-3"><summary>Share an expense equally across leases</summary>
+        <form asp-action="Allocate" method="post" class="desk-form">
+            <label>Expense<select required name="expenseId">@foreach(var expense in Model.Expenses){<option value="@expense.Id">#@expense.Id · @expense.Name · ৳@expense.Amount</option>}</select></label>
+            <label>Billing month<input required type="month" name="month" /></label>
+            <button class="btn btn-primary">Allocate to this building’s leases</button>
+        </form></details>
+}

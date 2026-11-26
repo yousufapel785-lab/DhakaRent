@@ -1,0 +1,43 @@
+@model List<DhakaRent.Entities.Models.OwnerSubscription>
+@{
+    ViewData["Title"] = "Subscription";
+    var admin = User.IsInRole("Admin");
+    var owners = (Dictionary<string,string?>)ViewData["Owners"]!;
+}
+<h1>Subscription</h1>
+@if (TempData["PlanError"] is string error) { <p role="alert" class="alert alert-warning">@error</p> }
+@if (admin) {
+    <details class="card card-body mb-3"><summary>Set an owner's plan</summary>
+        <form asp-action="Set" method="post" class="desk-form">
+            <label>Owner email<input name="ownerEmail" type="email" required /></label>
+            <label>Plan name<input name="plan" maxlength="100" required /></label>
+            <label>Building limit<input type="number" name="buildings" min="1" required /></label>
+            <label>Unit limit<input type="number" name="units" min="1" required /></label>
+            <label>Monthly fee (৳)<input type="number" name="fee" min="0" step=".01" required /></label>
+            <label>Trial through<input type="date" name="trialThrough" /></label>
+            <button class="btn btn-primary">Save terms</button>
+        </form></details>
+}
+@if (Model.Count == 0) { <p>No subscription plan has been assigned.</p> }
+@foreach (var plan in Model)
+{
+    <section class="card card-body mb-3"><h2>@plan.Plan</h2>
+        <p>@owners[plan.OwnerId] · @plan.BuildingLimit buildings · @plan.UnitLimit units · ৳@plan.MonthlyFee.ToString("N2") monthly</p>
+        @if (plan.TrialThrough.HasValue) { <p>Trial through @plan.TrialThrough.Value.ToString("dd MMM yyyy")</p> }
+        @if (admin) {
+            <form asp-action="Issue" method="post" class="desk-form">
+                <input type="hidden" name="ownerId" value="@plan.OwnerId" />
+                <label>Subscription billing month<input type="month" name="month" required /></label>
+                <button class="btn btn-outline-primary">Issue subscription invoice</button>
+            </form>
+        }
+        @foreach (var month in plan.Months.OrderByDescending(m => m.Month)) {
+            <p>@month.Month.ToString("MMMM yyyy") · @month.Plan · ৳@month.Fee.ToString("N2") · @(month.ConfirmedUtc.HasValue ? "Confirmed" : "Awaiting payment")</p>
+            @if (admin && !month.ConfirmedUtc.HasValue) {
+                <form asp-action="Confirm" method="post" class="desk-form"><input type="hidden" name="id" value="@month.Id" />
+                    <label>Reference for received payment<input required maxlength="100" name="reference" /></label>
+                    <button class="btn btn-primary">Confirm subscription payment</button></form>
+            }
+        }
+    </section>
+}
