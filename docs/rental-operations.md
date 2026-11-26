@@ -28,7 +28,9 @@ The map uses Leaflet and OpenStreetMap tiles. Numeric coordinates remain availab
 
 ## Deployment
 
-Use .NET 10 and the matching EF Core tools. Configure the target `ConnectionStrings__DefaultConnection` through the environment. Generate and review the incremental SQL against staging, then apply the migration before starting the updated web app.
+The Visual Studio Development launch profiles apply pending SQL Server migrations to `DefaultConnection` before seeding roles and looking up the admin user. The development database account needs permission to apply those migrations.
+
+For staging and production, use .NET 10 and the matching EF Core tools. Configure the target `ConnectionStrings__DefaultConnection` through the environment. Generate and review the incremental SQL against staging, then apply the migration before starting the updated web app.
 
 ```sh
 dotnet ef migrations script --idempotent --project DhakaRent.DataAccess --startup-project DhakaRent.Web.UI --output rental-operations.sql

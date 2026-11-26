@@ -102,6 +102,13 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    if (app.Environment.IsDevelopment())
+    {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        if (db.Database.IsSqlServer())
+            await db.Database.MigrateAsync();
+    }
+
     var roleManager =
         services.GetRequiredService<RoleManager<IdentityRole>>();
 
