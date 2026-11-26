@@ -1,6 +1,9 @@
 :root {
     --ink: #182f2b;
-    --green: #165c49;
+    --green-rgb: 22, 92, 73;
+    --green: rgb(var(--green-rgb));
+    --bs-primary-rgb: var(--green-rgb);
+    --bs-link-color-rgb: var(--green-rgb);
     --green-deep: #104636;
     --muted: #536861;
     --line: #d8e2dc;
@@ -33,10 +36,20 @@ h1, h2, h3, h4, h5 { font-weight: 650; }
 .login-link { font-weight: 600; color: var(--ink); text-decoration: none; }
 .btn { border-radius: 9px; font-weight: 600; padding: .62rem 1rem; }
 .btn-sm { padding: .38rem .7rem; }
-.btn-primary, .btn-success { background: var(--green); border-color: var(--green); color: white; }
-.btn-primary:is(:hover,:focus,:active), .btn-success:is(:hover,:focus,:active) { background: var(--green-deep); border-color: var(--green-deep); }
-.btn-outline-primary { color: var(--green); border-color: #85a99c; }
-.btn-outline-primary:hover { background: var(--green); border-color: var(--green); }
+.btn-primary, .btn-success, .btn-outline-primary, .btn-outline-success {
+    --bs-btn-hover-color: white;
+    --bs-btn-hover-bg: var(--green-deep);
+    --bs-btn-hover-border-color: var(--green-deep);
+    --bs-btn-active-color: white;
+    --bs-btn-active-bg: var(--green-deep);
+    --bs-btn-active-border-color: var(--green-deep);
+    --bs-btn-disabled-color: white;
+    --bs-btn-disabled-bg: var(--green);
+    --bs-btn-disabled-border-color: var(--green);
+    --bs-btn-focus-shadow-rgb: var(--green-rgb);
+}
+.btn-primary, .btn-success { --bs-btn-bg: var(--green); --bs-btn-border-color: var(--green); }
+.btn-outline-primary, .btn-outline-success { --bs-btn-color: var(--green); --bs-btn-border-color: #85a99c; }
 .btn-outline-secondary { color: #405a52; border-color: #aabbb2; }
 .page-content { flex: 1; padding-block: 28px 48px; min-width: 0; }
 .page-content > .container { padding-inline: 0; }
@@ -82,7 +95,7 @@ h1, h2, h3, h4, h5 { font-weight: 650; }
 .card > .card-header:first-child { border-radius: 14px 14px 0 0; }
 .card-title { overflow-wrap: anywhere; }
 .alert { border-radius: 10px; }
-.alert-info { background: #edf4f8; color: #2a5165; border-color: #d1e2ec; }
+.alert-info { background: var(--mint); color: var(--green-deep); border-color: var(--line); }
 .table { color: var(--ink); }
 .table thead th { color: #465d52; background-color: #eff4ef; vertical-align: middle; font-size: .85rem; }
 .table td { vertical-align: middle; }
@@ -136,3 +149,38 @@ h1, h2, h3, h4, h5 { font-weight: 650; }
 .dashboard-stats h6 { font-size: .9rem; letter-spacing: 0; color: var(--muted); }
 .dashboard-stats h2 { margin-bottom: 0; font-variant-numeric: tabular-nums; }
 .dashboard-stats .text-warning { color: #936b14 !important; }
+
+/* Listing details and rental activity use the same surfaces as the public search. */
+.property-details-card h1, .property-location, .inquiry-property-title,
+.owner-viewing-title, .viewing-property-title { overflow-wrap: anywhere; }
+.property-location, .owner-viewing-location, .viewing-property-location,
+.inquiry-property-location { color: var(--muted); overflow-wrap: anywhere; }
+.property-rent { color: var(--green); font-weight: 700; }
+.property-action-panel { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
+.wishlist-saved-indicator { color: var(--green-deep); background: var(--mint); padding: .4rem .75rem; border-radius: 2rem; font-weight: 600; }
+.property-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.property-facts > div, .inquiry-info-box, .owner-viewing-info, .inquiry-actions-panel, .owner-viewing-actions {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+}
+.property-facts dt, .owner-viewing-label, .inquiry-info-label { color: var(--muted); font-size: .85rem; font-weight: 600; margin-bottom: .4rem; }
+.property-facts dd { margin: 0; color: var(--ink); font-weight: 600; }
+.property-description, .inquiry-message { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.property-details-card hr { border-color: var(--line); opacity: 1; margin: 1.5rem 0; }
+.inquiry-property-title, .owner-viewing-title, .viewing-property-title { font-weight: 700; }
+.inquiry-reference, .owner-viewing-reference, .viewing-request-reference { color: var(--muted); font-size: .82rem; }
+.inquiry-info-box, .owner-viewing-info { height: 100%; }
+.owner-viewing-message { white-space: pre-line; overflow-wrap: anywhere; }
+.owner-viewing-action-section + .owner-viewing-action-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.owner-viewing-status, .viewing-status-badge, .inquiry-status-badge { border-radius: 2rem; padding: .45rem .75rem; }
+.viewing-request-table { min-width: 950px; }
+.viewing-request-table :is(th, td) { padding: 1rem; }
+.viewing-request-table thead th { white-space: nowrap; }
+@media (max-width: 575px) {
+    .property-action-panel { align-items: stretch; flex-direction: column; }
+    .property-action-panel .btn, .inquiry-actions-panel .btn { width: 100%; }
+    .wishlist-saved-indicator { align-self: flex-start; }
+    .property-facts { grid-template-columns: 1fr; }
+}
