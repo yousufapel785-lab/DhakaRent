@@ -3,6 +3,10 @@
 @{
     ViewData["Title"] = "Property Details";
 
+    var description = string.IsNullOrWhiteSpace(Model.Description)
+        ? "No description provided."
+        : Model.Description;
+
     // Property ID from ViewModel.
     int propertyId = Model.Id;
 
@@ -15,251 +19,6 @@
     bool isSavedToWishlist =
         isTenant && Model.IsSavedToWishlist;
 }
-
-<style>
-    .property-details-card {
-        border: 0;
-        border-radius: 16px;
-        overflow: hidden;
-    }
-
-    .property-details-title {
-        font-weight: 700;
-        color: #1e293b;
-        overflow-wrap: anywhere;
-    }
-
-    .property-location {
-        color: #64748b;
-        font-size: 15px;
-    }
-
-    .property-rent {
-        color: #15803d;
-        font-weight: 700;
-    }
-
-    .property-action-panel {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-    }
-
-        .property-action-panel form {
-            margin: 0;
-        }
-
-    .wishlist-save-btn,
-    .wishlist-remove-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-weight: 600;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-        .wishlist-save-btn:hover,
-        .wishlist-remove-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-        }
-
-        .wishlist-save-btn:focus-visible,
-        .wishlist-remove-btn:focus-visible {
-            outline: 2px solid #2563eb;
-            outline-offset: 2px;
-        }
-
-    .wishlist-saved-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background-color: #ecfdf5;
-        color: #047857;
-        border: 1px solid #a7f3d0;
-        border-radius: 20px;
-        padding: 7px 12px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .property-info-item {
-        margin-bottom: 16px;
-    }
-
-        .property-info-item strong {
-            color: #334155;
-            margin-right: 5px;
-        }
-
-    .property-description {
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-        color: #475569;
-        line-height: 1.7;
-    }
-
-    @@media (max-width: 575px) {
-        .property-action-panel {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-            .property-action-panel form,
-            .property-action-panel .btn {
-                width: 100%;
-            }
-
-        .wishlist-saved-indicator {
-            align-self: flex-start;
-        }
-    }
-
-    @@media (prefers-reduced-motion: reduce) {
-        .wishlist-save-btn,
-        .wishlist-remove-btn {
-            transition: none;
-        }
-
-            .wishlist-save-btn:hover,
-            .wishlist-remove-btn:hover {
-                transform: none;
-            }
-    }
-
-    /* =====================================
-           DHAKARENT AI - DARK DETAILS THEME
-           ===================================== */
-
-    body {
-        background: linear-gradient( 145deg, #081425 0%, #10233b 55%, #0b1729 100% );
-    }
-
-    /* Main Property Card */
-    .property-details-card {
-        background: linear-gradient( 180deg, #1b334d 0%, #13263e 100% );
-        border: 1px solid #2c4963;
-        border-radius: 20px;
-        color: #e2e8f0;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.20) !important;
-    }
-
-        /* Headings */
-        .property-details-card h2,
-        .property-details-card h5 {
-            color: #f8fafc;
-        }
-
-    .property-details-title {
-        color: #f8fafc;
-        font-weight: 800;
-    }
-
-    /* Location and Muted Text */
-    .property-location {
-        color: #a8c0d5;
-    }
-
-    .property-details-card .text-muted {
-        color: #b4c7d9 !important;
-    }
-
-    /* Monthly Rent */
-    .property-rent {
-        color: #5eead4;
-        font-weight: 800;
-        font-size: 29px;
-    }
-
-    /* Property Information Boxes */
-    .property-info-item {
-        background: #10233a;
-        border: 1px solid #2b4963;
-        border-radius: 12px;
-        padding: 15px;
-        color: #e2e8f0;
-    }
-
-        .property-info-item strong {
-            color: #5eead4;
-        }
-
-    /* Description */
-    .property-description {
-        color: #d4e4f0;
-        line-height: 1.8;
-    }
-
-    /* Dividers */
-    .property-details-card hr {
-        border-color: #53728b;
-        opacity: 0.55;
-        margin: 24px 0;
-    }
-
-    /* Contact Owner Button */
-    .property-details-card .btn-primary {
-        background: #2dd4bf;
-        border-color: #2dd4bf;
-        color: #062c32;
-        font-weight: 700;
-    }
-
-        .property-details-card .btn-primary:hover {
-            background: #5eead4;
-            border-color: #5eead4;
-            color: #062c32;
-        }
-
-    /* Request Viewing Button */
-    .property-details-card .btn-outline-success {
-        border-color: #34d399;
-        color: #6ee7b7;
-        font-weight: 600;
-    }
-
-        .property-details-card .btn-outline-success:hover {
-            background: #34d399;
-            color: #062c32;
-        }
-
-    /* Wishlist Buttons */
-    .wishlist-save-btn,
-    .wishlist-remove-btn {
-        border-color: #fb7185;
-        color: #fda4af;
-        font-weight: 700;
-    }
-
-        .wishlist-save-btn:hover,
-        .wishlist-remove-btn:hover {
-            background: #be123c;
-            border-color: #fb7185;
-            color: #ffffff;
-        }
-
-    /* Saved State */
-    .wishlist-saved-indicator {
-        background: rgba(16, 185, 129, 0.14);
-        border-color: #34d399;
-        color: #6ee7b7;
-    }
-
-    /* Back to Properties */
-    .container > .mb-3 > .btn-outline-secondary {
-        color: #dbeafe;
-        border-color: #64748b;
-    }
-
-        .container > .mb-3 > .btn-outline-secondary:hover {
-            background: #253c55;
-            color: #ffffff;
-        }
-
-</style>
 
 <div class="container py-4">
 
@@ -384,7 +143,7 @@
                                    value="true" />
 
                             <button type="submit"
-                                    class="btn btn-outline-danger wishlist-remove-btn">
+                                    class="btn btn-outline-danger">
 
                                 <i class="bi bi-heart-fill"></i>
 
@@ -413,7 +172,7 @@
                                    value="true" />
 
                             <button type="submit"
-                                    class="btn btn-outline-danger wishlist-save-btn">
+                                    class="btn btn-outline-primary">
 
                                 <i class="bi bi-heart"></i>
 
@@ -440,7 +199,7 @@
                     <a asp-controller="ViewingRequest"
                        asp-action="Create"
                        asp-route-propertyId="@propertyId"
-                       class="btn btn-outline-success">
+                       class="btn btn-outline-primary">
 
                         <i class="bi bi-calendar-check me-1"></i>
 
@@ -462,66 +221,35 @@
 
             </h5>
 
-            <div class="row mt-3">
-
-                <!-- Property Type -->
-                <div class="col-md-6 property-info-item">
-
-                    <strong>Property Type:</strong>
-
-                    @Model.PropertyType
-
+            <dl class="property-facts">
+                <div>
+                    <dt>Property Type</dt>
+                    <dd>@Model.PropertyType</dd>
                 </div>
-
-                <!-- Property Size -->
-                <div class="col-md-6 property-info-item">
-
-                    <strong>Size:</strong>
-
-                    @Model.SizeInSqFt.ToString("N0") sqft
-
+                <div>
+                    <dt>Size</dt>
+                    <dd>@Model.SizeInSqFt.ToString("N0") sqft</dd>
                 </div>
-
-                <!-- Bedrooms -->
-                <div class="col-md-6 property-info-item">
-
-                    <strong>Bedrooms:</strong>
-
-                    @Model.Bedrooms
-
+                <div>
+                    <dt>Bedrooms</dt>
+                    <dd>@Model.Bedrooms</dd>
                 </div>
-
-                <!-- Bathrooms -->
-                <div class="col-md-6 property-info-item">
-
-                    <strong>Bathrooms:</strong>
-
-                    @Model.Bathrooms
-
+                <div>
+                    <dt>Bathrooms</dt>
+                    <dd>@Model.Bathrooms</dd>
                 </div>
-
-                <!-- Furnishing -->
-                <div class="col-md-6 property-info-item">
-
-                    <strong>Furnishing:</strong>
-
-                    @(Model.IsFurnished
+                <div>
+                    <dt>Furnishing</dt>
+                    <dd>@(Model.IsFurnished
                         ? "Furnished"
-                        : "Unfurnished")
-
+                        : "Unfurnished")</dd>
                 </div>
-
-                <!-- Available From -->
-                <div class="col-md-6 property-info-item">
-
-                    <strong>Available From:</strong>
-
-                    @(Model.AvailableFrom?.ToString("dd MMM yyyy")
-                        ?? "Not specified")
-
+                <div>
+                    <dt>Available From</dt>
+                    <dd>@(Model.AvailableFrom?.ToString("dd MMM yyyy")
+                        ?? "Not specified")</dd>
                 </div>
-
-            </div>
+            </dl>
 
             <hr />
 
@@ -549,11 +277,7 @@
 
             </h5>
 
-            <div class="property-description">
-                @(string.IsNullOrWhiteSpace(Model.Description)
-                ? "No description provided."
-                : Model.Description)
-            </div>
+            <p class="property-description mb-0">@description</p>
 
         </div>
 
