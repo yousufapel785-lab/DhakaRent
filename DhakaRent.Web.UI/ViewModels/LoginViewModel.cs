@@ -16,6 +16,8 @@ namespace DhakaRent.Web.UI.ViewModels
         public string Password { get; set; } = string.Empty;
 
 
+        public string? ReturnUrl { get; set; }
+
         [Display(Name = "Remember Me")]
         public bool RememberMe { get; set; }
     }
