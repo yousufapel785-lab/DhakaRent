@@ -1,4 +1,5 @@
-﻿
+﻿using DhakaRent.Web.UI.Services;
+
 using System.Security.Claims;
 using DhakaRent.Facade.Interfaces;
 using DhakaRent.Web.UI.ViewModels;
@@ -140,7 +141,7 @@ namespace DhakaRent.Web.UI.Controllers
         // GET: /ViewingRequest/Index
         // Tenant sees their own requests with property details.
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromServices] CommunicationDirectory directory)
         {
             // Step A: Get logged-in Tenant ID.
             string? tenantId = User.FindFirstValue(
@@ -197,6 +198,7 @@ namespace DhakaRent.Web.UI.Controllers
             ViewData["ViewingRequestItems"] = viewModels;
 
             // Step G: Keep the existing View Model working.
+            ViewData["Contacts"] = await directory.ForRecordsAsync(ContactKind.Viewings, requests.Select(r => r.Id));
             return View(requests);
         }
 

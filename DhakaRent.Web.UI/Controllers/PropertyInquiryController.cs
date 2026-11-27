@@ -1,4 +1,5 @@
-﻿
+﻿using DhakaRent.Web.UI.Services;
+
 using System.Security.Claims;
 using DhakaRent.Entities.Enums;
 using DhakaRent.Facade.Interfaces;
@@ -29,7 +30,7 @@ namespace DhakaRent.Web.UI.Controllers
         // Show logged-in tenant's inquiries
         // with actual property information.
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromServices] CommunicationDirectory directory)
         {
             // Step A: Get logged-in Tenant ID.
             string? tenantId = User.FindFirstValue(
@@ -108,6 +109,7 @@ namespace DhakaRent.Web.UI.Controllers
 
             // Step J: Keep the original inquiry list model.
             // This avoids breaking the existing Index.cshtml.
+            ViewData["Contacts"] = await directory.ForRecordsAsync(ContactKind.Inquiries, inquiries.Select(r => r.Id));
             return View(inquiries);
         }
 

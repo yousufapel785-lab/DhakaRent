@@ -1,6 +1,7 @@
 ﻿@model IReadOnlyList<DhakaRent.Entities.Models.Conversation>
 
 @{
+    var contacts = (Dictionary<int, DhakaRent.Web.UI.ViewModels.ListingContact>)ViewData["Contacts"]!;
     ViewData["Title"] = "My Conversations";
 
     bool isOwner = User.IsInRole("PropertyOwner");
@@ -152,6 +153,7 @@
 
                     @foreach (var conversation in Model)
                     {
+                        var contact = contacts.GetValueOrDefault(conversation.Id);
                         DateTime lastActivity =
                             conversation.LastMessageAt
                             ?? conversation.CreatedAt;
@@ -179,14 +181,11 @@
                                             </p>
 
                                             
-                                            <!-- Conversation Participant -->
-                                            <p class="mb-2">
-                                                <strong>Chatting with:</strong>
-
-                                                @(isOwner
-                                                    ? "Tenant"
-                                                    : "Property Owner")
-                                            </p>
+                                            @if (contact != null)
+                                            {
+                                                <p class="fw-semibold mb-1">@contact.Title</p>
+                                                <partial name="_ContactPerson" model="@(conversation.TenantId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ? contact.Owner : contact.Tenant)" />
+                                            }
 
                                             <!-- Latest Message Preview -->
                                             @if (latestMessagePreviews.TryGetValue(

@@ -3,6 +3,7 @@
 @model IReadOnlyList<DhakaRent.Entities.Models.PropertyInquiry>
 
 @{
+    var contacts = (Dictionary<int, DhakaRent.Web.UI.ViewModels.ListingContact>)ViewData["Contacts"]!;
     ViewData["Title"] = "My Inquiries";
 
     // Inquiry ID -> Conversation ID mapping.
@@ -159,6 +160,7 @@
         <!-- Inquiry Cards -->
         @foreach (var inquiry in Model)
         {
+            var contact = contacts.GetValueOrDefault(inquiry.Id);
             // Find actual property information
             // for the current inquiry.
             propertyItemsByInquiryId.TryGetValue(
@@ -210,6 +212,10 @@
                                 @(propertyItem?.PropertyTitle
                                     ?? "Property unavailable")
                             </div>
+                            @if (contact != null)
+                            {
+                                <partial name="_ContactPerson" model="contact.Owner" />
+                            }
 
                             <!-- Property Area -->
                             @if (!string.IsNullOrWhiteSpace(

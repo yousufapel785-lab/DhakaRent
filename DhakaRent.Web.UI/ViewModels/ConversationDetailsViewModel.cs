@@ -28,6 +28,8 @@ namespace DhakaRent.Web.UI.ViewModels
 
         // Logged-in user's ID
         // Used to identify sent and received messages
+        public ListingContact? Contact { get; init; }
+
         public required string CurrentUserId
         {
             get;

@@ -69,9 +69,13 @@
 
                 <div>
                     <h5 class="fw-bold mb-1">
-                        Tenant &amp; Property Owner
+                        @(Model.Contact?.Title ?? "Conversation")
                     </h5>
 
+                    @if (Model.Contact != null)
+                    {
+                        <partial name="_ContactPerson" model="@(initialMessageIsMine ? Model.Contact.Owner : Model.Contact.Tenant)" />
+                    }
                     <small class="text-muted">
                         Inquiry #@Model.Inquiry.Id
                     </small>
@@ -114,7 +118,7 @@
                         <small class="fw-semibold">
                             @(initialMessageIsMine
                                 ? "You"
-                                : "Tenant")
+                                : (Model.Contact?.Tenant.DisplayName ?? "Tenant"))
                         </small>
 
                         <small class="text-muted ms-2">
@@ -156,8 +160,8 @@
                 string senderName = isMine
                     ? "You"
                     : message.SenderId == Model.Conversation.TenantId
-                        ? "Tenant"
-                        : "Property Owner";
+                        ? (Model.Contact?.Tenant.DisplayName ?? "Tenant")
+                        : (Model.Contact?.Owner.DisplayName ?? "Property owner");
 
                 <div class="d-flex mb-4
                     @(isMine

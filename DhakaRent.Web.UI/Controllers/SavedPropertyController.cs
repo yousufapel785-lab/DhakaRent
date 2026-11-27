@@ -4,6 +4,7 @@ using DhakaRent.Facade.Interfaces;
 using DhakaRent.Web.UI.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DhakaRent.Web.UI.Controllers
 {
@@ -76,6 +77,8 @@ namespace DhakaRent.Web.UI.Controllers
                 bool saved = await _savedPropertyFacade
                     .SaveAsync(tenantId, propertyId);
 
+                if (WantsJson) return Json(new { saved = true });
+
                 if (saved)
                 {
                     TempData["SuccessMessage"] =
@@ -87,8 +90,16 @@ namespace DhakaRent.Web.UI.Controllers
                         "This property is already in your wishlist.";
                 }
             }
+            catch (DbUpdateException) when (WantsJson)
+            {
+                // A second tab can finish saving the same listing before this insert.
+                if (await _savedPropertyFacade.IsSavedAsync(tenantId, propertyId))
+                    return Json(new { saved = true });
+                throw;
+            }
             catch (ArgumentException ex)
             {
+                if (WantsJson) return BadRequest(new { error = ex.Message });
                 TempData["ErrorMessage"] = ex.Message;
             }
 
@@ -116,8 +127,19 @@ namespace DhakaRent.Web.UI.Controllers
                 return Unauthorized();
             }
 
-            bool removed = await _savedPropertyFacade
-                .RemoveAsync(tenantId, propertyId);
+            bool removed;
+            try
+            {
+                removed = await _savedPropertyFacade.RemoveAsync(tenantId, propertyId);
+            }
+            catch (DbUpdateConcurrencyException) when (WantsJson)
+            {
+                if (!await _savedPropertyFacade.IsSavedAsync(tenantId, propertyId))
+                    return Json(new { saved = false });
+                throw;
+            }
+
+            if (WantsJson) return Json(new { saved = false });
 
             if (removed)
             {
@@ -136,6 +158,9 @@ namespace DhakaRent.Web.UI.Controllers
                 returnToDetails,
                 returnUrl);
         }
+
+        private bool WantsJson => Request.GetTypedHeaders().Accept?.Any(
+            header => header.MediaType.Value == "application/json") == true;
 
         // Handles safe redirects after Save or Remove.
         // Supports:

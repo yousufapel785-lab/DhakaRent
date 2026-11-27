@@ -3,6 +3,7 @@
 @model IReadOnlyList<DhakaRent.Entities.Models.ViewingRequest>
 
 @{
+    var contacts = (Dictionary<int, DhakaRent.Web.UI.ViewModels.ListingContact>)ViewData["Contacts"]!;
     ViewData["Title"] = "Received Viewing Requests";
 
     // Bangladesh time zone.
@@ -145,6 +146,7 @@
         <!-- Viewing Request Cards -->
         @foreach (var request in Model)
         {
+            var contact = contacts.GetValueOrDefault(request.Id);
             // Find actual property information.
             propertyItemsByRequestId.TryGetValue(
                 request.Id,
@@ -246,6 +248,10 @@
                                 @(propertyItem?.PropertyTitle
                                     ?? "Property unavailable")
                             </div>
+                            @if (contact != null)
+                            {
+                                <partial name="_ContactPerson" model="contact.Tenant" />
+                            }
 
                             <!-- Property Area -->
                             @if (!string.IsNullOrWhiteSpace(
