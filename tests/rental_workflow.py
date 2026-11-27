@@ -28,7 +28,7 @@ with sync_playwright() as pw:
     password = "Ui1!" + secrets.token_hex(12)
     for role in ["Tenant", "PropertyOwner"]:
         visit("/Account/Register")
-        page.locator("#FullName").fill("Test User")
+        page.locator("#FullName").fill(f"Test {role}")
         email = role.lower() + secrets.token_hex(3) + "@example.test"
         if role == "Tenant":
             tenant = email
@@ -170,7 +170,54 @@ with sync_playwright() as pw:
     page.get_by_role("button", name="Approve Property").click()
     assert guest.get(image_url).status == 200
     assert guest.get("/listing-media/3").status == 404
+    guest_page = browser.new_page(base_url=base_url)
+    guest_page.goto("/Properties?Area=Mirpur")
+    guest_page.get_by_role("button", name="Save to wishlist").click()
+    assert guest_page.locator("#account-prompt").is_visible()
+    guest_page.close()
+
     login(tenant)
+    visit("/Properties?Area=Mirpur")
+    heart = page.get_by_role("button", name="Wishlist for Garden apartment")
+    assert heart.get_attribute("aria-pressed") == "false"
+    heart.click()
+    page.wait_for_selector('.wishlist-toggle[aria-pressed="true"]')
+    assert "Area=Mirpur" in page.url
+    page.wait_for_function("""getComputedStyle(document.querySelector('[data-wishlist-form] svg')).fill === "rgb(201, 35, 70)" """)
+    page.reload()
+    assert heart.get_attribute("aria-pressed") == "true"
+    visit("/SavedProperty")
+    assert "Garden apartment" in page.locator("main").inner_text()
+    visit("/Properties?Area=Mirpur")
+    heart.click()
+    page.wait_for_selector('.wishlist-toggle[aria-pressed="false"]')
+    visit("/SavedProperty")
+    assert "Garden apartment" not in page.locator("main").inner_text()
+
+    visit("/PropertyInquiry/Create?propertyId=1")
+    page.locator("main textarea").fill("Private question about water charges")
+    page.locator("main button[type=submit]").click()
+    visit("/PropertyInquiry")
+    assert owner in page.locator(".contact-person").inner_text()
+    visit("/ViewingRequest/Create?propertyId=1")
+    page.locator("#RequestedDateTimeLocal").fill((today + timedelta(days=2)).strftime("%Y-%m-%dT14:00"))
+    page.locator("#TenantMessage").fill("Private viewing note")
+    page.locator("main button[type=submit]").click()
+    visit("/ViewingRequest")
+    assert owner in page.locator(".contact-person").inner_text()
+    login(owner)
+    visit("/OwnerInquiry")
+    assert tenant in page.locator(".contact-person").inner_text()
+    page.locator("[name=replyContent]").fill("Private owner reply")
+    page.get_by_role("button", name="Send Reply").click()
+    for path in ["/OwnerViewingRequest", "/Messaging", "/Messaging/Details/1"]:
+        visit(path)
+        assert tenant in page.locator(".contact-person").inner_text()
+    login(tenant)
+    for path in ["/Messaging", "/Messaging/Details/1"]:
+        visit(path)
+        assert owner in page.locator(".contact-person").inner_text()
+    assert page.request.get("/CommunicationOverview").status == 403
     visit("/Properties/Details/1")
     page.get_by_text("Report this listing").click()
     f = page.locator('form[action$="/Submit"]')
@@ -284,6 +331,12 @@ with sync_playwright() as pw:
     page.locator("main button[type=submit]").click()
     visit("/Documents")
     page.get_by_role("button", name="Accept for profile").click()
+    for kind in ["Conversations", "Inquiries", "Viewings"]:
+        visit("/CommunicationOverview?kind=" + kind)
+        rendered = page.locator("main").inner_text()
+        assert all(value in rendered for value in [tenant, owner, "Test Tenant", "Test PropertyOwner", "Garden apartment"])
+        assert all(value not in rendered for value in ["Private owner reply", "Private viewing note", "Private question about water charges"])
+    assert page.request.get("/Messaging/Details/1").status == 403
     visit("/ListingReports")
     page.locator("[name=remarks]").fill("Address checked")
     page.get_by_role("button", name="Mark resolved").click()
@@ -315,6 +368,7 @@ with sync_playwright() as pw:
     page.locator("#ConfirmPassword").fill(password)
     page.locator("#RegistrationConsent").check()
     page.locator("main button[type=submit]").click()
+    assert page.request.get("/Messaging/Details/1").status == 404
     assert page.request.get("/RentalDesk/Receipt/1").status == 404
     assert page.request.get("/Documents/Download/1").status == 404
     assert page.request.get("/BuildingAccounts/Export/1").status == 404

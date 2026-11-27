@@ -3,6 +3,7 @@
 @using DhakaRent.Entities.Enums
 
 @{
+    var contacts = (Dictionary<int, DhakaRent.Web.UI.ViewModels.ListingContact>)ViewData["Contacts"]!;
     ViewData["Title"] = "Received Inquiries";
 
     // Inquiry ID -> Conversation ID mapping
@@ -104,6 +105,7 @@
 
                             @foreach (var inquiry in Model)
                             {
+                                var contact = contacts.GetValueOrDefault(inquiry.Id);
                                 <tr>
 
                                     <!-- Inquiry ID -->
@@ -113,7 +115,8 @@
 
                                     <!-- Property -->
                                     <td>
-                                        Property #@inquiry.PropertyId
+                                        @(contact?.Title ?? $"Property #{inquiry.PropertyId}")
+                                        @if (contact != null) { <partial name="_ContactPerson" model="contact.Tenant" /> }
                                     </td>
 
                                     <!-- Tenant Message -->

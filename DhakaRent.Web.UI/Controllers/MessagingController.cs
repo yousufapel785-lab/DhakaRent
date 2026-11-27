@@ -1,4 +1,5 @@
-﻿
+﻿using DhakaRent.Web.UI.Services;
+
 using System.Security.Claims;
 using DhakaRent.Facade.Interfaces;
 using DhakaRent.Entities.Models;
@@ -33,7 +34,7 @@ namespace DhakaRent.Web.UI.Controllers
         // Show conversations, unread counts
         // and latest message previews.
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromServices] CommunicationDirectory directory)
         {
             // Step A: Get logged-in user's ID.
             string? userId = User.FindFirstValue(
@@ -74,6 +75,7 @@ namespace DhakaRent.Web.UI.Controllers
                 latestMessagePreviews;
 
             // Step I: Return existing conversation list.
+            ViewData["Contacts"] = await directory.ForRecordsAsync(ContactKind.Conversations, conversations.Select(r => r.Id));
             return View(conversations);
         }
 
@@ -81,7 +83,7 @@ namespace DhakaRent.Web.UI.Controllers
 
         // GET: /Messaging/Details/5
         [HttpGet]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, [FromServices] CommunicationDirectory directory)
         {
             // Step A: Get logged-in user ID.
             string? userId = User.FindFirstValue(
@@ -155,8 +157,10 @@ namespace DhakaRent.Web.UI.Controllers
                 .MarkAsReadAsync(id, userId);
 
             // Step G: Prepare the view model.
+            var contacts = await directory.ForRecordsAsync(ContactKind.Conversations, new[] { id });
             var model = new ConversationDetailsViewModel
             {
+                Contact = contacts.GetValueOrDefault(id),
                 Conversation = conversation,
                 Inquiry = inquiry,
                 Messages = messages,

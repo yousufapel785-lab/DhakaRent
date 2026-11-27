@@ -226,3 +226,13 @@ body { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
 .desk-form label { display: grid; gap: .3rem; font-weight: 600; }
 .desk-form :is(input, textarea, select) { max-width: 100%; border: 1px solid var(--line); border-radius: .5rem; padding: .45rem; }
 .listing-preview { display: block; width: 100%; height: 7rem; border-radius: .5rem; object-fit: contain; background: var(--paper); }
+.wishlist-toggle { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; }
+.wishlist-heart { flex: none; fill: transparent; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.wishlist-toggle[aria-pressed="true"] .wishlist-heart { fill: #c92346; stroke: #c92346; }
+@media (prefers-reduced-motion: no-preference) {
+    .wishlist-heart { transition: fill .15s, stroke .15s, transform .15s; }
+    .wishlist-toggle:active .wishlist-heart { transform: scale(.90); }
+}
+.contact-person { display: grid; gap: .1rem; margin-block: .4rem; overflow-wrap: anywhere; }
+.contact-person span { font-size: .88rem; color: var(--muted); }
+.contact-person .contact-role { font-weight: 600; }

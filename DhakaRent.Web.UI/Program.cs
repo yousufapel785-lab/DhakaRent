@@ -74,6 +74,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 // 3. MVC Services
+builder.Services.AddScoped<DhakaRent.Web.UI.Services.CommunicationDirectory>();
 builder.Services.AddScoped<DhakaRent.Web.UI.Services.ListingAssets>();
 builder.Services.AddHostedService<DhakaRent.Web.UI.Services.RentalSchedule>();
 builder.Services.AddScoped<DhakaRent.Web.UI.Services.OwnerCapacity>();

@@ -39,7 +39,7 @@
         else if (User.IsInRole("PropertyOwner")) { Parent("My listings", "PropertyOwner", "Dashboard"); }
         if (controller == "Messaging" && action == "Details") { Parent("My conversations", "Messaging"); }
     }
-    if (controller is "Portfolio" or "RentalDesk" or "Documents" or "BuildingAccounts" or "Subscriptions" or "AssignedRepairs" or "ListingReports")
+    if (controller is "Portfolio" or "RentalDesk" or "Documents" or "BuildingAccounts" or "Subscriptions" or "AssignedRepairs" or "ListingReports" or "CommunicationOverview")
     {
         if (User.IsInRole("Admin")) { Parent("Admin dashboard", "Admin", "Dashboard"); }
         else if (User.IsInRole("PropertyOwner")) { Parent("My listings", "PropertyOwner", "Dashboard"); }

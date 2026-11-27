@@ -89,10 +89,14 @@
                             {
                                 <a asp-controller="PropertyInquiry" asp-action="Create" asp-route-propertyId="@item.Id" class="btn btn-primary">Contact owner</a>
                                 <form asp-controller="SavedProperty" asp-action="@(item.IsSavedToWishlist ? "Remove" : "Save")" method="post"
-                                      onsubmit="@(item.IsSavedToWishlist ? "return confirm('Remove this property from your wishlist?')" : null)">
+                                      data-wishlist-form data-save="@Url.Action("Save", "SavedProperty")" data-remove="@Url.Action("Remove", "SavedProperty")">
                                     <input type="hidden" name="propertyId" value="@item.Id" />
                                     <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                    <button class="btn btn-outline-secondary w-100">@(item.IsSavedToWishlist ? "Remove from wishlist" : "Save to wishlist")</button>
+                                    <button type="submit" class="btn btn-outline-secondary wishlist-toggle w-100"
+                                            aria-label="Wishlist for @item.Title" aria-pressed="@(item.IsSavedToWishlist ? "true" : "false")">
+                                        <partial name="_WishlistHeart" /><span data-wishlist-label>@(item.IsSavedToWishlist ? "Saved to wishlist" : "Save to wishlist")</span>
+                                    </button>
+                                    <small data-wishlist-feedback role="status" class="text-danger"></small>
                                 </form>
                             }
                             else if (User.Identity?.IsAuthenticated != true)
@@ -106,3 +110,7 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script src="~/js/wishlist.js" asp-append-version="true"></script>
+}

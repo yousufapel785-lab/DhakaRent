@@ -1,0 +1,9 @@
+@model DhakaRent.Web.UI.ViewModels.ContactPerson
+<div class="contact-person">
+    <span class="contact-role">@Model.Role</span>
+    <strong>@Model.DisplayName</strong>
+    @if (!string.IsNullOrWhiteSpace(Model.Email) && Model.Email != Model.DisplayName)
+    {
+        <span>@Model.Email</span>
+    }
+</div>

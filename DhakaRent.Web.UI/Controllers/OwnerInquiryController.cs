@@ -1,4 +1,6 @@
-﻿
+﻿using DhakaRent.Web.UI.Services;
+using DhakaRent.Web.UI.ViewModels;
+
 using System.Security.Claims;
 using DhakaRent.Facade.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +26,7 @@ namespace DhakaRent.Web.UI.Controllers
         // GET: /OwnerInquiry
         // Show received inquiries with conversation mapping.
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromServices] CommunicationDirectory directory)
         {
             // Step A: Get logged-in PropertyOwner ID.
             string? ownerId = User.FindFirstValue(
@@ -54,6 +56,7 @@ namespace DhakaRent.Web.UI.Controllers
                 conversationIdsByInquiryId;
 
             // Step F: Keep existing inquiries model.
+            ViewData["Contacts"] = await directory.ForRecordsAsync(ContactKind.Inquiries, inquiries.Select(r => r.Id));
             return View(inquiries);
         }
 
